@@ -24,7 +24,7 @@ table inet mywall {
 
 	chain public {
 		ct state established,related accept
-		ct state invalid drop
+		ct state invalid counter drop
 		tcp dport { 22, 2223 } accept comment "SSH(-Bulk)"
 		tcp dport { 80, 443 } accept comment "HTTP(S)"
 		tcp dport 22000 accept comment "Syncthing transfer"
@@ -39,7 +39,7 @@ table inet mywall {
 		ip6 nexthdr ipv6-icmp accept comment "All ICMP types"
 		meta l4proto udp reject
 		meta l4proto tcp reject with tcp reset
-		counter reject
+		counter reject with icmpx type port-unreachable
 	}
 
 	chain vpn {
@@ -53,6 +53,6 @@ table inet mywall {
 	chain forward {
 		type filter hook forward priority filter; policy drop;
 		ct state established,related accept
-		tcp dport 4000-4001 accept comment "magic-wormhole"
+		tcp dport 4000-4001 accept comment "magic-wormhole-(relay,mailbox) container"
 	}
 }
