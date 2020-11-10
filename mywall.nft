@@ -1,0 +1,58 @@
+table inet mywall {
+	set trusted-iif {
+		type iface_index
+		elements = { "lo" }
+	}
+
+	set public-iif {
+		type iface_index
+		elements = { "ens3" }
+	}
+
+	set vpn-iifgroup {
+		type devgroup
+		elements = { 1 }
+	}
+
+	chain dispatch {
+		type filter hook input priority filter; policy drop;
+		iif @trusted-iif accept
+		iif @public-iif jump public
+		iifgroup @vpn-iifgroup jump vpn
+		counter jump common
+	}
+
+	chain public {
+		ct state established,related accept
+		ct state invalid drop
+		tcp dport { 22, 2223 } accept comment "SSH(-Bulk)"
+		tcp dport { 80, 443 } accept comment "HTTP(S)"
+		tcp dport 22000 accept comment "Syncthing transfer"
+		udp dport 21027 accept comment "Syncthing discovery"
+		udp dport 51820 accept comment "Wireguard packets"
+		jump common
+	}
+
+	chain common {
+		ip protocol icmp accept comment "All ICMP types"
+		ip protocol igmp accept
+		ip6 nexthdr ipv6-icmp accept comment "All ICMP types"
+		meta l4proto udp reject
+		meta l4proto tcp reject with tcp reset
+		counter reject
+	}
+
+	chain vpn {
+		counter accept
+	}
+
+	chain output {
+		type filter hook output priority filter; policy accept;
+	}
+
+	chain forward {
+		type filter hook forward priority filter; policy drop;
+		ct state established,related accept
+		tcp dport 4000-4001 accept comment "magic-wormhole"
+	}
+}
