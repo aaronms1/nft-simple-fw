@@ -1,0 +1,3 @@
+include "./services-def.nft"
+
+tcp dport $TCPD_WORMHOLE accept comment "magic-wormhole-(relay,mailbox) container"

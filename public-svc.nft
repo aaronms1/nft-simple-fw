@@ -1,0 +1,7 @@
+include "./services-def.nft"
+
+tcp dport $TCPD_SSH accept comment "SSH(-Bulk)"
+tcp dport $TCPD_HTTPS accept comment "HTTP(S)"
+tcp dport $TCPD_SYNCTHING accept comment "Syncthing transfer"
+udp dport $UDPD_SYNCTHING accept comment "Syncthing discovery"
+udp dport $TCPD_WIREGUARD  accept comment "Wireguard packets"

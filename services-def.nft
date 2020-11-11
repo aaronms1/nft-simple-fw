@@ -1,0 +1,7 @@
+
+define TCPD_SSH = { 22, 2223 }
+define TCPD_HTTPS = { 80, 443 }
+define TCPD_SYNCTHING = 22000
+define TCPD_WIREGUARD = 51820
+define TCPD_WORMHOLE = 4000-4001
+define UDPD_SYNCTHING = 21027

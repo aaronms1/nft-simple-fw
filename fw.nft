@@ -1,4 +1,4 @@
-table inet mywall {
+table inet fw {
 	set trusted-iif {
 		type iface_index
 		elements = { "lo" }
@@ -14,10 +14,10 @@ table inet mywall {
 		elements = { 1 }
 	}
 
-	counter invalid-ct { packets 0 bytes 0; }
-	counter vpn-accept { packets 0 bytes 0; }
-	counter catchall-drop { packets 0 bytes 0; }
-	counter iif-other-jump { packets 0 bytes 0; }
+	counter invalid-ct { packets 0 bytes 0 }
+	counter vpn-accept { packets 0 bytes 0 }
+	counter catchall-drop { packets 0 bytes 0 }
+	counter iif-other-jump { packets 0 bytes 0 }
 
 	chain dispatch {
 		type filter hook input priority filter; policy drop;
@@ -30,11 +30,7 @@ table inet mywall {
 	chain public {
 		ct state established,related accept
 		ct state invalid counter name "invalid-ct" drop
-		tcp dport { 22, 2223 } accept comment "SSH(-Bulk)"
-		tcp dport { 80, 443 } accept comment "HTTP(S)"
-		tcp dport 22000 accept comment "Syncthing transfer"
-		udp dport 21027 accept comment "Syncthing discovery"
-		udp dport 51820 accept comment "Wireguard packets"
+		include "./public-svc.nft"
 		jump common
 	}
 
@@ -58,6 +54,6 @@ table inet mywall {
 	chain forward {
 		type filter hook forward priority filter; policy drop;
 		ct state established,related accept
-		tcp dport 4000-4001 accept comment "magic-wormhole-(relay,mailbox) container"
+		include "./forward-svc.nft"
 	}
 }
