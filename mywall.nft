@@ -14,17 +14,22 @@ table inet mywall {
 		elements = { 1 }
 	}
 
+	counter invalid-ct { packets 0 bytes 0; }
+	counter vpn-accept { packets 0 bytes 0; }
+	counter catchall-drop { packets 0 bytes 0; }
+	counter iif-other-jump { packets 0 bytes 0; }
+
 	chain dispatch {
 		type filter hook input priority filter; policy drop;
 		iif @trusted-iif accept
 		iif @public-iif jump public
 		iifgroup @vpn-iifgroup jump vpn
-		counter jump common
+		counter name "iif-other-jump" jump common
 	}
 
 	chain public {
 		ct state established,related accept
-		ct state invalid counter drop
+		ct state invalid counter name "invalid-ct" drop
 		tcp dport { 22, 2223 } accept comment "SSH(-Bulk)"
 		tcp dport { 80, 443 } accept comment "HTTP(S)"
 		tcp dport 22000 accept comment "Syncthing transfer"
@@ -39,11 +44,11 @@ table inet mywall {
 		ip6 nexthdr ipv6-icmp accept comment "All ICMP types"
 		meta l4proto udp reject
 		meta l4proto tcp reject with tcp reset
-		counter reject with icmpx type port-unreachable
+		counter name "catchall-drop" reject with icmpx type port-unreachable
 	}
 
 	chain vpn {
-		counter accept
+		counter name "vpn-accept" accept
 	}
 
 	chain output {

@@ -35,27 +35,34 @@ table inet blackhole {
 		auto-merge
 	}
 
+	counter blacklist-v4 { packets 0 bytes 0; }
+	counter blacklist-v6 { packets 0 bytes 0; }
+	counter country-v4 { packets 0 bytes 0; }
+	counter country-v6 { packets 0 bytes 0; }
+
+	define trusted_ifgroup = 1
+
 	chain input {
 		type filter hook input priority -1; policy ${default_policy}
 		iif "lo" accept
-		iifgroup 1 accept
+		iifgroup $$trusted_ifgroup accept
 		ct state established,related accept
 		ip saddr @whitelist-v4 accept
 		ip6 saddr @whitelist-v6 accept
-		ip saddr @blacklist-v4 counter jump log-deny-block
-		ip6 saddr @blacklist-v6 counter jump log-deny-block
-		ip saddr @country-v4 counter jump log-deny-country
-		ip6 saddr @country-v6 counter jump log-deny-country
+		ip saddr @blacklist-v4 counter name "blacklist-v4" jump log-deny-block
+		ip6 saddr @blacklist-v6 counter name "blacklist-v6" jump log-deny-block
+		ip saddr @country-v4 counter name "country-v4" jump log-deny-country
+		ip6 saddr @country-v6 counter name "country-v6" jump log-deny-country
 		ip protocol icmp accept
 	}
 
 	chain log-deny-block {
-		limit rate 5/minute burst 5 packets counter log prefix "blackholed (bl): " level debug flags all
+		limit rate 5/minute burst 5 packets log prefix "blackholed (bl): " level debug flags ip options
 		${block_policy}
 	}
 
 	chain log-deny-country {
-		limit rate 5/minute burst 5 packets counter log prefix "blackholed (cn): " level debug flags all
+		limit rate 5/minute burst 5 packets log prefix "blackholed (cn): " level debug flags ip options
 		${country_policy}
 	}
 }
