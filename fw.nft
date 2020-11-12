@@ -76,5 +76,6 @@ table inet fw {
 		type filter hook forward priority filter; policy drop;
 		ct state established,related accept
 		include "./forward-svc.nft"
+		goto common
 	}
 }
