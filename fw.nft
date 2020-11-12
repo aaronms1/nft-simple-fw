@@ -26,12 +26,15 @@ table inet fw {
 	counter vpn-packets { packets 0 bytes 0 }
 	counter private-packets { packets 0 bytes 0 }
 
+	# dispatch -> ethernet(private()) -> public -> common -> reject
+	#        | -> vpn -> accept
+
 	chain dispatch {
 		type filter hook input priority filter; policy drop;
 		iif "lo" accept
-		iifgroup 1 jump ethernet
-		iifgroup 2 jump vpn
-		counter name "iif-other-jump" jump common
+		iifgroup 1 goto ethernet
+		iifgroup 2 goto vpn
+		counter name "iif-other-jump" goto common
 	}
 
 	chain ethernet {
@@ -39,7 +42,7 @@ table inet fw {
 		ct state invalid counter name "invalid-ct" drop
 		ip saddr @private-net4 jump private
 		ip6 saddr @private-net6 jump private
-		jump public
+		goto public
 	}
 
 	chain vpn {
@@ -49,12 +52,11 @@ table inet fw {
 	chain private {
 		include "./private-svc.nft"
 		counter name "private-packets"
-		jump public
 	}
 
 	chain public {
 		include "./public-svc.nft"
-		jump common
+		goto common
 	}
 
 	chain common {

@@ -42,22 +42,22 @@ table inet blackhole {
 
 	define filter_iifgroup = 1
 
+	# input(filter()) -> accept
+
 	chain input {
-		type filter hook input priority -1; policy ${default_policy}
+		type filter hook input priority -1; policy accept
 		iif "lo" accept
 		iifgroup $$filter_iifgroup jump filter
-		accept
 	}
 
 	chain filter {
-		ct state established,related accept
-		ip saddr @whitelist-v4 accept
-		ip6 saddr @whitelist-v6 accept
-		ip saddr @blacklist-v4 counter name "blacklist-v4" jump log-deny-block
-		ip6 saddr @blacklist-v6 counter name "blacklist-v6" jump log-deny-block
-		ip saddr @country-v4 counter name "country-v4" jump log-deny-country
-		ip6 saddr @country-v6 counter name "country-v6" jump log-deny-country
-		ip protocol icmp accept
+		ct state established,related return
+		ip saddr @whitelist-v4 return
+		ip6 saddr @whitelist-v6 return
+		ip saddr @blacklist-v4 counter name "blacklist-v4" goto log-deny-block
+		ip6 saddr @blacklist-v6 counter name "blacklist-v6" goto log-deny-block
+		ip saddr @country-v4 counter name "country-v4" goto log-deny-country
+		ip6 saddr @country-v6 counter name "country-v6" goto log-deny-country
 	}
 
 	chain log-deny-block {
