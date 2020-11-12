@@ -1,35 +1,58 @@
 table inet fw {
-	set trusted-iif {
-		type iface_index
-		elements = { "lo" }
+
+	set private-net4 {
+		type ipv4_addr
+		flags constant,interval
+		elements = {
+			10.0.0.0/8,
+			169.254.0.0/16,
+			172.16.0.0/12,
+			192.168.0.0/16,
+		}
 	}
 
-	set public-iif {
-		type iface_index
-		elements = { "ens3" }
-	}
-
-	set vpn-iifgroup {
-		type devgroup
-		elements = { 1 }
+	set private-net6 {
+		type ipv6_addr
+		flags constant,interval
+		elements = {
+			fe80::/10,
+			fc00::/7,
+		}
 	}
 
 	counter invalid-ct { packets 0 bytes 0 }
-	counter vpn-accept { packets 0 bytes 0 }
 	counter catchall-drop { packets 0 bytes 0 }
 	counter iif-other-jump { packets 0 bytes 0 }
+	counter vpn-packets { packets 0 bytes 0 }
+	counter private-packets { packets 0 bytes 0 }
 
 	chain dispatch {
 		type filter hook input priority filter; policy drop;
-		iif @trusted-iif accept
-		iif @public-iif jump public
-		iifgroup @vpn-iifgroup jump vpn
+		iif "lo" accept
+		iifgroup 1 jump ethernet
+		iifgroup 2 jump vpn
 		counter name "iif-other-jump" jump common
 	}
 
-	chain public {
+	chain ethernet {
 		ct state established,related accept
 		ct state invalid counter name "invalid-ct" drop
+		ip saddr @private-net4 jump private
+		ip6 saddr @private-net6 jump private
+		jump public
+	}
+
+	chain vpn {
+		counter name "vpn-packets" accept
+	}
+
+	chain private {
+		include "./private-svc.nft"
+		counter name "private-packets"
+		jump public
+	}
+
+	chain public {
 		include "./public-svc.nft"
 		jump common
 	}
@@ -41,10 +64,6 @@ table inet fw {
 		meta l4proto udp reject
 		meta l4proto tcp reject with tcp reset
 		counter name "catchall-drop" reject with icmpx type port-unreachable
-	}
-
-	chain vpn {
-		counter name "vpn-accept" accept
 	}
 
 	chain output {

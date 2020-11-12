@@ -40,12 +40,16 @@ table inet blackhole {
 	counter country-v4 { packets 0 bytes 0; }
 	counter country-v6 { packets 0 bytes 0; }
 
-	define trusted_ifgroup = 1
+	define filter_iifgroup = 1
 
 	chain input {
 		type filter hook input priority -1; policy ${default_policy}
 		iif "lo" accept
-		iifgroup $$trusted_ifgroup accept
+		iifgroup $$filter_iifgroup jump filter
+		accept
+	}
+
+	chain filter {
 		ct state established,related accept
 		ip saddr @whitelist-v4 accept
 		ip6 saddr @whitelist-v6 accept
