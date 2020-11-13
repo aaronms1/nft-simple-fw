@@ -6,5 +6,5 @@ Uses performant [interface group](https://www.freedesktop.org/software/systemd/m
 
 ## Usage
 
-- Assign interface groups via systemd-networkd, edit `*-svc.nft` files and load via `nft -f fw.nft`.
-- If you are using nft-blackhole, copy `nft-blackhole.template.nft` to `/usr/share/nft-blackhole/nft-blackhole.template`, dropping the nft extension and overwriting the default template.
+- Assign interface groups via systemd-networkd, edit `*-svc.nft` files and load via `nft -f fw.nft` or use the supplied systemd service file.
+- If you are using nft-blackhole, copy `nft-blackhole/nft-blackhole.template.nft` to `/usr/share/nft-blackhole/nft-blackhole.template`, dropping the nft extension and overwriting the default template.
