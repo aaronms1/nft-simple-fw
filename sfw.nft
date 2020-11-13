@@ -1,4 +1,5 @@
-table inet fw {
+table inet sfw {
+	include "./services.d/services.def"
 
 	set private-net4 {
 		type ipv4_addr
@@ -31,6 +32,7 @@ table inet fw {
 
 	chain dispatch {
 		type filter hook input priority filter; policy drop;
+		
 		iif "lo" accept
 		iifgroup 1 goto ethernet
 		iifgroup 2 goto vpn
@@ -46,16 +48,17 @@ table inet fw {
 	}
 
 	chain vpn {
+		include "./services.d/vpn/*.nft"
 		counter name "vpn-packets" accept
 	}
 
 	chain private {
-		include "./private-svc.nft"
+		include "./services.d/private/*.nft"
 		counter name "private-packets"
 	}
 
 	chain public {
-		include "./public-svc.nft"
+		include "./services.d/public/*.nft"
 		goto common
 	}
 
@@ -74,8 +77,9 @@ table inet fw {
 
 	chain forward {
 		type filter hook forward priority filter; policy drop;
+
 		ct state established,related accept
-		include "./forward-svc.nft"
+		include "./services.d/forward/*.nft"
 		goto common
 	}
 }

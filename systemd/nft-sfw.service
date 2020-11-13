@@ -1,0 +1,16 @@
+[Unit]
+Description=Netfilter Tables
+Documentation=man:nft(8) https://betaco.de/zeno/nft-simple-firewall/src/branch/master/README.md
+Wants=network-pre.target
+Before=network-pre.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/etc/nftables
+ExecStart=/usr/bin/nft -f /etc/nftables/sfw.nft
+ExecReload=/usr/bin/nft delete table inet sfw ';' include '"/etc/nftables/sfw.nft"'
+ExecStop=/usr/bin/nft delete table inet sfw
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,2 @@
+tcp dport $TCPD_SYNCTHING accept comment "Syncthing transfer"
+udp dport $UDPD_SYNCTHING accept comment "Syncthing discovery"

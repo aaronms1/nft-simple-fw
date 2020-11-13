@@ -1,3 +1,2 @@
-include "./services-def.nft"
-
+# podman container
 tcp dport $TCPD_WORMHOLE accept comment "magic-wormhole-(relay,mailbox) container"
