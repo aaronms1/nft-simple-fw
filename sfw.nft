@@ -4,13 +4,13 @@ table inet sfw {
 	set private-net4 {
 		type ipv4_addr
 		flags constant,interval
-		elements = $PRIVATE_SUBNET_V4
+		elements = $PRIVATE_SUBNETS_V4
 	}
 
 	set private-net6 {
 		type ipv6_addr
 		flags constant,interval
-		elements = $PRIVATE_SUBNET_V6
+		elements = $PRIVATE_SUBNETS_V6
 	}
 
 	counter invalid-ct { packets 0 bytes 0 }
@@ -40,17 +40,17 @@ table inet sfw {
 	}
 
 	chain vpn {
-		include "./vpn-zone.nft"
+		include "./zones/vpn.nft"
 		counter name "vpn-packets" accept
 	}
 
 	chain private {
-		include "./private-zone.nft"
+		include "./zones/private.nft"
 		counter name "private-packets";
 	}
 
 	chain public {
-		include "./public-zone.nft"
+		include "./zones/public.nft"
 		goto common
 	}
 
@@ -65,14 +65,14 @@ table inet sfw {
 
 	chain output {
 		type filter hook output priority filter; policy accept;
-		include "./output-zone.nft"
+		include "./zones/output.nft"
 	}
 
 	chain forward {
 		type filter hook forward priority filter; policy drop;
 
 		ct state established,related accept
-		include "./forward-zone.nft"
+		include "./zones/forward.nft"
 		goto common
 	}
 }
