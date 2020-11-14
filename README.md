@@ -12,5 +12,5 @@ Uses performant [interface group](https://www.freedesktop.org/software/systemd/m
 
 ## Usage
 
-- Assign interface groups via systemd-networkd, create/edit `services.d/{forward,private,public,vpn}/*.nft` files for the services you wish to use and load via `nft -f sfw.nft` or use the supplied systemd service file.
-- If you are using nft-blackhole, copy or link `nft-blackhole/template.nft` to `/usr/share/nft-blackhole/nft-blackhole.template`.
+- Assign interface groups via systemd-networkd, create/edit `services.d/{forward,private,public,vpn}/*.nft` files for the services you wish to use and load via `nft -f sfw.nft` or use the supplied systemd service file [systemd/nft-sfw.service](systemd/nft-sfw.service).
+- If you are using nft-blackhole, copy or link [nft-blackhole/template.nft](nft-blackhole/template.nft) to `/usr/share/nft-blackhole/nft-blackhole.template`.

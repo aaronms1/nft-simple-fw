@@ -63,9 +63,9 @@ table inet sfw {
 	}
 
 	chain common {
-		ip protocol icmp accept comment "All ICMP types"
+		ip protocol icmp accept
 		ip protocol igmp accept
-		ip6 nexthdr ipv6-icmp accept comment "All ICMP types"
+		ip6 nexthdr ipv6-icmp accept
 		meta l4proto udp reject
 		meta l4proto tcp reject with tcp reset
 		counter name "catchall-drop" reject with icmpx type port-unreachable
