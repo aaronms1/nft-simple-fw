@@ -1,16 +1,16 @@
 # interface groups
-define ETHERNET_IIFGROUP = 1
-define VPN_IIFGROUP = 2
+define IIFGROUP_ETHERNET = 1
+define IIFGROUP_VPN = 2
 
 # private network sets
-define PRIVATE_SUBNETS_V4 = {
+define SET_PRIVATE_SUBNETS_V4 = {
 	10.0.0.0/8,
 	169.254.0.0/16,
 	172.16.0.0/12,
 	192.168.0.0/16
 }
 
-define PRIVATE_SUBNETS_V6 = {
+define SET_PRIVATE_SUBNETS_V6 = {
 	fe80::/10,
 	fc00::/7
 }
@@ -21,9 +21,9 @@ define PRIVATE_SUBNETS_V6 = {
 
 # service definitions for easy access
 ## syncthing
-define TCPD_SYNCTHING = 22000
-define UDPD_SYNCTHING = 21027
+define DPORT_TCP_SYNCTHING = 22000
+define DPORT_UDP_SYNCTHING = 21027
 ## wireguard
-define TCPD_WIREGUARD = 51820
+define DPORT_TCP_WIREGUARD = 51820
 ## magic-wormhole
-define TCPD_WORMHOLE = 4000-4001
+define DPORT_TCP_WORMHOLE = 4000-4001

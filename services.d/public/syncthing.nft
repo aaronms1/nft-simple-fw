@@ -1,2 +1,2 @@
-tcp dport $TCPD_SYNCTHING accept comment "syncthing transfer protocol"
-udp dport $UDPD_SYNCTHING accept comment "syncthing discovery protocol"
+tcp dport $DPORT_TCP_SYNCTHING accept comment "syncthing transfer protocol"
+udp dport $DPORT_UDP_SYNCTHING accept comment "syncthing discovery protocol"

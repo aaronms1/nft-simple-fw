@@ -1,2 +1,2 @@
 # podman container
-tcp dport $TCPD_WORMHOLE accept comment "magic-wormhole-(relay,mailbox) container"
+tcp dport $DPORT_TCP_WORMHOLE accept comment "magic-wormhole-(relay,mailbox) container"

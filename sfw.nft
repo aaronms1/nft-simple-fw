@@ -4,13 +4,13 @@ table inet sfw {
 	set private-net4 {
 		type ipv4_addr
 		flags constant,interval
-		elements = $PRIVATE_SUBNETS_V4
+		elements = $SET_PRIVATE_SUBNETS_V4
 	}
 
 	set private-net6 {
 		type ipv6_addr
 		flags constant,interval
-		elements = $PRIVATE_SUBNETS_V6
+		elements = $SET_PRIVATE_SUBNETS_V6
 	}
 
 	counter invalid-ct { packets 0 bytes 0 }
@@ -26,8 +26,8 @@ table inet sfw {
 		type filter hook input priority filter; policy drop;
 		
 		iif "lo" accept
-		iifgroup $ETHERNET_IIFGROUP goto ethernet
-		iifgroup $VPN_IIFGROUP goto vpn
+		iifgroup $IIFGROUP_ETHERNET goto ethernet
+		iifgroup $IIFGROUP_VPN goto vpn
 		counter name "iif-other-jump" goto common
 	}
 
