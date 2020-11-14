@@ -1,24 +1,16 @@
 table inet sfw {
-	include "./services.d/services.def"
+	include "./conf.def"
 
 	set private-net4 {
 		type ipv4_addr
 		flags constant,interval
-		elements = {
-			10.0.0.0/8,
-			169.254.0.0/16,
-			172.16.0.0/12,
-			192.168.0.0/16,
-		}
+		elements = $PRIVATE_SUBNET_V4
 	}
 
 	set private-net6 {
 		type ipv6_addr
 		flags constant,interval
-		elements = {
-			fe80::/10,
-			fc00::/7,
-		}
+		elements = $PRIVATE_SUBNET_V6
 	}
 
 	counter invalid-ct { packets 0 bytes 0 }
@@ -34,8 +26,8 @@ table inet sfw {
 		type filter hook input priority filter; policy drop;
 		
 		iif "lo" accept
-		iifgroup 1 goto ethernet
-		iifgroup 2 goto vpn
+		iifgroup $ETHERNET_IIFGROUP goto ethernet
+		iifgroup $VPN_IIFGROUP goto vpn
 		counter name "iif-other-jump" goto common
 	}
 
@@ -48,17 +40,17 @@ table inet sfw {
 	}
 
 	chain vpn {
-		include "./services.d/vpn/*.nft"
+		include "./vpn-zone.nft"
 		counter name "vpn-packets" accept
 	}
 
 	chain private {
-		include "./services.d/private/*.nft"
-		counter name "private-packets"
+		include "./private-zone.nft"
+		counter name "private-packets";
 	}
 
 	chain public {
-		include "./services.d/public/*.nft"
+		include "./public-zone.nft"
 		goto common
 	}
 
@@ -73,13 +65,14 @@ table inet sfw {
 
 	chain output {
 		type filter hook output priority filter; policy accept;
+		include "./output-zone.nft"
 	}
 
 	chain forward {
 		type filter hook forward priority filter; policy drop;
 
 		ct state established,related accept
-		include "./services.d/forward/*.nft"
+		include "./forward-zone.nft"
 		goto common
 	}
 }

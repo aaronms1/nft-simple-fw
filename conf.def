@@ -1,0 +1,32 @@
+# interface groups
+define ETHERNET_IIFGROUP = 1
+define VPN_IIFGROUP = 2
+
+# private network sets
+
+define PRIVATE_SUBNET_V4 = {
+	10.0.0.0/8,
+	169.254.0.0/16,
+	172.16.0.0/12,
+	192.168.0.0/16
+}
+
+define PRIVATE_SUBNET_V6 = {
+	fe80::/10,
+	fc00::/7
+}
+
+# service definitions for easy access
+
+## syncthing
+define TCPD_SYNCTHING = 22000
+define UDPD_SYNCTHING = 21027
+## wireguard
+define TCPD_WIREGUARD = 51820
+## magic-wormhole
+define TCPD_WORMHOLE = 4000-4001
+
+# by default the private zone is to include public services
+# uncommenting the following expression prevents this.
+
+#chain private { goto common; }

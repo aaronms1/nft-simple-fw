@@ -1,0 +1,3 @@
+# chain public {
+	include "./services.d/public/*.nft"
+# }

@@ -1,0 +1,3 @@
+# chain output {
+	# include "./services.d/output/*.nft"
+# }

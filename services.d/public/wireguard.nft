@@ -1,1 +1,1 @@
-udp dport $TCPD_WIREGUARD  accept comment "Wireguard packets"
+udp dport $TCPD_WIREGUARD  accept comment "wireguard protocol"

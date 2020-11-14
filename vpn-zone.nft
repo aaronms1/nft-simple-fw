@@ -1,0 +1,3 @@
+# chain vpn {
+	include "./services.d/vpn/*.nft"
+# }
