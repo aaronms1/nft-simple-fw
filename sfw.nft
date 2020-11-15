@@ -1,3 +1,5 @@
+#!/usr/bin/env nft -f
+
 table inet sfw {
 	include "./conf.def"
 
@@ -13,14 +15,20 @@ table inet sfw {
 		elements = $SET_PRIVATE_NETS_V6
 	}
 
-	counter invalid-ct { packets 0 bytes 0 }
-	counter catchall-drop { packets 0 bytes 0 }
-	counter iif-other-jump { packets 0 bytes 0 }
-	counter vpn-packets { packets 0 bytes 0 }
-	counter private-packets { packets 0 bytes 0 }
+	# debug counter
+	counter invalid-ct-ethernet { packets 0 bytes 0 }
+	# !(tcp|udp) protocol packets dropped
+	counter catchall-common { packets 0 bytes 0 }
+	# iifgroup != IIFGROUP_ETHERNET | IIFGROUP_VPN
+	counter iif-other-common { packets 0 bytes 0 }
 
-	# dispatch -> ethernet(private()) -> public -> common -> reject
-	#        | -> vpn -> accept
+	# HOOK        CHAIN        CHAIN        CHAIN       CHAIN      VERDICT
+	# input   ==> dispatch ==> ethernet ==> public  ==> common ==> reject
+	# input   ==> dispatch ==> ethernet ==> private ==> common ==> reject
+	# input   ==> dispatch ==>              vpn                ==> accept
+	# input   ==> dispatch ==>                          common ==> reject
+	# output  ==>                       ==> output             ==> accept
+	# forward ==>                       ==> forward ==> common ==> reject
 
 	chain dispatch {
 		type filter hook input priority filter; policy drop;
@@ -28,12 +36,12 @@ table inet sfw {
 		iif "lo" accept
 		iifgroup $IIFGROUP_ETHERNET goto ethernet
 		iifgroup $IIFGROUP_VPN goto vpn
-		counter name "iif-other-jump" goto common
+		counter name "iif-other-common" goto common
 	}
 
 	chain ethernet {
 		ct state established,related accept
-		ct state invalid counter name "invalid-ct" drop
+		ct state invalid counter name "invalid-ct-ethernet" drop
 		ip saddr @private-net4 jump private
 		ip6 saddr @private-net6 jump private
 		goto public
@@ -41,12 +49,13 @@ table inet sfw {
 
 	chain vpn {
 		include "./zones/vpn.nft"
-		counter name "vpn-packets" accept
+		accept
 	}
 
 	chain private {
 		include "./zones/private.nft"
-		counter name "private-packets";
+		# this can be toggled in conf.def
+		continue comment "return back to ethernet, immediately jumping into public"
 	}
 
 	chain public {
@@ -60,7 +69,7 @@ table inet sfw {
 		ip6 nexthdr ipv6-icmp accept
 		meta l4proto udp reject
 		meta l4proto tcp reject with tcp reset
-		counter name "catchall-drop" reject with icmpx type port-unreachable
+		counter name "catchall-common" reject with icmpx type port-unreachable
 	}
 
 	chain output {
@@ -70,9 +79,6 @@ table inet sfw {
 
 	chain forward {
 		type filter hook forward priority filter; policy drop;
-
-		ct state established,related accept
 		include "./zones/forward.nft"
-		goto common
 	}
 }

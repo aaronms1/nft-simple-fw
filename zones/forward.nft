@@ -1,3 +1,15 @@
 # chain forward {
+	ct state established,related accept
 	include "./services.d/forward/*.nft"
+
+	ip saddr @private-net4 ip protocol icmp accept
+	ip daddr @private-net4 ip protocol icmp accept
+	
+	ip6 saddr @private-net6 ip6 nexthdr ipv6-icmp accept
+	ip6 daddr @private-net6 ip6 nexthdr ipv6-icmp accept
+
+	meta l4proto udp reject
+	meta l4proto tcp reject with tcp reset
+
+	counter name "catchall-common" reject with icmpx type port-unreachable
 # }
