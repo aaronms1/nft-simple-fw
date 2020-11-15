@@ -1,4 +1,6 @@
-# chain forward {
+chain forward {
+	type filter hook forward priority filter; policy drop;
+	
 	ct state established,related accept
 	include "./services.d/forward/*.nft"
 
@@ -12,4 +14,4 @@
 	meta l4proto tcp reject with tcp reset
 
 	counter name "catchall-common" reject with icmpx type port-unreachable
-# }
+}

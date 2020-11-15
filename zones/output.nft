@@ -1,3 +1,4 @@
-# chain output {
-	# include "./services.d/output/*.nft"
-# }
+chain output {
+	type filter hook output priority filter; policy accept;
+	include "./services.d/output/*.nft"
+}

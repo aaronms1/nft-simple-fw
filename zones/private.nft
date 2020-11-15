@@ -1,3 +1,4 @@
-# chain private {
+chain private {
 	include "./services.d/private/*.nft"
-# }
+	continue comment "return back to ethernet, immediately jumping into public"
+}

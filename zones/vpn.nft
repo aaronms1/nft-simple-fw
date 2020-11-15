@@ -1,3 +1,4 @@
-# chain vpn {
+chain vpn {
 	include "./services.d/vpn/*.nft"
-# }
+	accept
+}

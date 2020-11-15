@@ -47,22 +47,6 @@ table inet sfw {
 		goto public
 	}
 
-	chain vpn {
-		include "./zones/vpn.nft"
-		accept
-	}
-
-	chain private {
-		include "./zones/private.nft"
-		# this can be toggled in conf.def
-		continue comment "return back to ethernet, immediately jumping into public"
-	}
-
-	chain public {
-		include "./zones/public.nft"
-		goto common
-	}
-
 	chain common {
 		ip protocol icmp accept
 		ip protocol igmp accept
@@ -72,13 +56,9 @@ table inet sfw {
 		counter name "catchall-common" reject with icmpx type port-unreachable
 	}
 
-	chain output {
-		type filter hook output priority filter; policy accept;
-		include "./zones/output.nft"
-	}
-
-	chain forward {
-		type filter hook forward priority filter; policy drop;
-		include "./zones/forward.nft"
-	}
+	include "./zones/vpn.nft"
+	include "./zones/private.nft"
+	include "./zones/public.nft"
+	include "./zones/output.nft"
+	include "./zones/forward.nft"
 }
