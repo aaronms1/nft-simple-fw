@@ -1,4 +1,4 @@
 chain public {
 	include "./services.d/public/*.nft"
-	goto common
+	goto epilogue
 }

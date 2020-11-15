@@ -21,7 +21,7 @@ define SET_PRIVATE_NETS_V6 = {
 
 # by default the private zone is to include public services
 # uncommenting the following expression prevents this.
-#chain private { goto common; }
+#chain private { goto epilogue; }
 
 # service definitions for easy access
 ## syncthing

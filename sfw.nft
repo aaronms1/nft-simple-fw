@@ -15,45 +15,58 @@ table inet sfw {
 		elements = $SET_PRIVATE_NETS_V6
 	}
 
-	# debug counter
-	counter invalid-ct-ethernet { packets 0 bytes 0 }
+	# invalid packets
+	counter invalid-pkts { packets 0 bytes 0 }
 	# !(tcp|udp) protocol packets dropped
-	counter catchall-common { packets 0 bytes 0 }
+	counter catchall { packets 0 bytes 0 }
 	# iifgroup != IIFGROUP_ETHERNET | IIFGROUP_VPN
-	counter iif-other-common { packets 0 bytes 0 }
+	counter iif-other { packets 0 bytes 0 }
 
-	# HOOK        CHAIN        CHAIN        CHAIN       CHAIN      VERDICT
-	# input   ==> dispatch ==> ethernet ==> public  ==> common ==> reject
-	# input   ==> dispatch ==> ethernet ==> private ==> common ==> reject
-	# input   ==> dispatch ==>              vpn                ==> accept
-	# input   ==> dispatch ==>                          common ==> reject
-	# output  ==>                       ==> output             ==> accept
-	# forward ==>                       ==> forward ==> common ==> reject
+	# HOOK        CHAIN        CHAIN        CHAIN       CHAIN        VERDICT
+	# input   ==> dispatch ==> prologue ==> public  ==> epilogue ==> reject
+	# input   ==> dispatch ==> prologue ==> private ==> epilogue ==> reject
+	# input   ==> dispatch ==>              vpn                  ==> accept
+	# input   ==> dispatch ==>                          epilogue ==> reject
+	# output  ==>                       ==> output               ==> accept
+	# forward ==>                       ==> forward ==> epilogue ==> reject
 
 	chain dispatch {
 		type filter hook input priority filter; policy drop;
-		
 		iif "lo" accept
-		iifgroup $IIFGROUP_ETHERNET goto ethernet
+		iifgroup $IIFGROUP_ETHERNET goto prologue
 		iifgroup $IIFGROUP_VPN goto vpn
-		counter name "iif-other-common" goto common
+		counter name "iif-other" goto epilogue
 	}
 
-	chain ethernet {
-		ct state established,related accept
-		ct state invalid counter name "invalid-ct-ethernet" drop
+	chain prologue {
+		jump ct-state-filter
 		ip saddr @private-net4 jump private
 		ip6 saddr @private-net6 jump private
 		goto public
 	}
 
-	chain common {
+	chain epilogue {
 		ip protocol icmp accept
 		ip protocol igmp accept
 		ip6 nexthdr ipv6-icmp accept
+		goto verdict
+	}
+
+	chain verdict {
 		meta l4proto udp reject
 		meta l4proto tcp reject with tcp reset
-		counter name "catchall-common" reject with icmpx type port-unreachable
+		counter name "catchall" reject with icmpx type port-unreachable
+	}
+
+	chain ct-state-filter {
+		ct state established,related accept
+		ct state invalid counter name "invalid-pkts" drop
+	}
+
+	chain rp-filter {
+		# reverse path filter for ipv6
+		type filter hook prerouting priority raw; policy drop;
+		fib saddr . iif oif exists accept
 	}
 
 	include "./zones/vpn.nft"

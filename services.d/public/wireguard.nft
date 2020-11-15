@@ -1,1 +1,1 @@
-udp dport $DPORT_TCP_WIREGUARD  accept comment "wireguard protocol"
+udp dport $DPORT_TCP_WIREGUARD accept comment "wireguard protocol"

@@ -1,4 +1,5 @@
 chain private {
 	include "./services.d/private/*.nft"
-	continue comment "return back to ethernet, immediately jumping into public"
+	# see conf.def to change this conveniently
+	continue comment "return back to caller chain"
 }
