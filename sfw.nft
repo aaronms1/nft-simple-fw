@@ -21,6 +21,8 @@ table inet sfw {
 	counter catchall { packets 0 bytes 0 }
 	# iifgroup != IIFGROUP_ETHERNET | IIFGROUP_VPN
 	counter iif-other { packets 0 bytes 0 }
+	# no reverse path
+	counter rpfilter { packets 0 bytes 0 }
 
 	# HOOK        CHAIN        CHAIN        CHAIN       CHAIN        VERDICT
 	# input   ==> dispatch ==> prologue ==> public  ==> epilogue ==> reject
@@ -67,6 +69,7 @@ table inet sfw {
 		# reverse path filter for ipv6
 		type filter hook prerouting priority raw; policy drop;
 		fib saddr . iif oif exists accept
+		counter name "rpfilter"
 	}
 
 	include "./zones/vpn.nft"
