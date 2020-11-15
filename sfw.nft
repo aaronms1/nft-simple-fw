@@ -4,13 +4,13 @@ table inet sfw {
 	set private-net4 {
 		type ipv4_addr
 		flags constant,interval
-		elements = $SET_PRIVATE_SUBNETS_V4
+		elements = $SET_PRIVATE_NETS_V4
 	}
 
 	set private-net6 {
 		type ipv6_addr
 		flags constant,interval
-		elements = $SET_PRIVATE_SUBNETS_V6
+		elements = $SET_PRIVATE_NETS_V6
 	}
 
 	counter invalid-ct { packets 0 bytes 0 }

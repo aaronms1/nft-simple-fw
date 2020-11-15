@@ -1,19 +1,24 @@
+# generic variables
+define NET_V6_LINK_LOCAL = fe80::/10
+define NET_V6_UNIQUE_LOCAL = fc00::/7
+
 # interface groups
 define IIFGROUP_ETHERNET = 1
 define IIFGROUP_VPN = 2
 
 # private network sets
-define SET_PRIVATE_SUBNETS_V4 = {
+define SET_PRIVATE_NETS_V4 = {
 	10.0.0.0/8,
 	169.254.0.0/16,
 	172.16.0.0/12,
 	192.168.0.0/16
 }
 
-define SET_PRIVATE_SUBNETS_V6 = {
-	fe80::/10,
-	fc00::/7
+define SET_PRIVATE_NETS_V6 = {
+	$NET_V6_LINK_LOCAL,
+	$NET_V6_UNIQUE_LOCAL
 }
+
 
 # by default the private zone is to include public services
 # uncommenting the following expression prevents this.

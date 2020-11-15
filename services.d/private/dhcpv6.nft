@@ -1,0 +1,1 @@
+ip6 saddr $NET_V6_LINK_LOCAL ip6 daddr $NET_V6_LINK_LOCAL udp sport dhcpv6-server udp dport dhcpv6-client accept comment "dhcpv6"
