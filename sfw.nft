@@ -25,6 +25,8 @@ table inet sfw {
 	counter non-unicast { packets 0 bytes 0 }
 	# no reverse path
 	counter no-reverse-path { packets 0 bytes 0 }
+	# ipv6 type 0 routing headers
+	counter type0-header { packets 0 bytes 0 }
 
 
 	chain iif-dispatch {
@@ -35,7 +37,7 @@ table inet sfw {
 		iifgroup $IIFGROUP_VPN goto vpn
 
 		# basic filtering of unhandled iifgroups
-		counter name "iif-other" jump icmpx-filter
+		counter name "iif-other" jump proto-filter
 		goto reject-verdict
 	}
 
@@ -43,7 +45,7 @@ table inet sfw {
 		ip saddr @private-net4 jump private
 		ip6 saddr @private-net6 jump private
 		jump public
-		jump icmpx-filter
+		jump proto-filter
 		goto reject-verdict
 	}
 
@@ -54,10 +56,11 @@ table inet sfw {
 		# end of matching
 	}
 
-	chain icmpx-filter {
+	chain proto-filter {
 		ip protocol icmp accept
 		ip protocol igmp accept
 		ip6 nexthdr ipv6-icmp accept
+		jump rt0-filter
 		jump non-unicast-filter
 	}
 
@@ -77,6 +80,11 @@ table inet sfw {
 		type filter hook prerouting priority raw; policy drop;
 		fib saddr . iif oif exists accept
 		counter name "no-reverse-path"
+	}
+
+	chain rt0-filter {
+		# disallow ipv6 type 0 routing headers
+		rt type 0 counter name "type0-header" reject with icmpv6 type addr-unreachable
 	}
 
 	include "./zones/vpn.nft"

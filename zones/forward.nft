@@ -11,6 +11,7 @@ chain forward {
 	ip6 saddr @private-net6 ip6 nexthdr ipv6-icmp accept
 	ip6 daddr @private-net6 ip6 nexthdr ipv6-icmp accept
 
+	jump rt0-filter
 	jump non-unicast-filter
 	goto reject-verdict
 }

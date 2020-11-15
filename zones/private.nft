@@ -5,6 +5,6 @@ chain private {
 	return comment "return to trampoline; include public services"
 
 	# unreachable by design if the expression above is enabled
-	jump icmpx-filter
+	jump proto-filter
 	goto reject-verdict
 }
