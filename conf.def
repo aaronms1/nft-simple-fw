@@ -19,10 +19,6 @@ define SET_PRIVATE_NETS_V6 = {
 	$NET_V6_UNIQUE_LOCAL
 }
 
-# by default the private zone is to include public services
-# uncommenting the following expression prevents this.
-#chain private { goto epilogue; }
-
 # service definitions for easy access
 ## syncthing
 define DPORT_TCP_SYNCTHING = 22000

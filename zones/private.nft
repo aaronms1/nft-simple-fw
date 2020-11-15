@@ -1,5 +1,10 @@
 chain private {
 	include "./services.d/private/*.nft"
-	# see conf.def to change this conveniently
-	continue comment "return back to caller chain"
+
+	# comment out the next line to not include public services
+	return comment "return to trampoline; include public services"
+
+	# unreachable by design if the expression above is enabled
+	jump icmpx-filter
+	goto reject-verdict
 }

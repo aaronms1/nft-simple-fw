@@ -52,6 +52,7 @@ table inet blackhole {
 
 	chain filter {
 		ct state established,related return
+		meta pkttype { broadcast, multicast } return
 		ip saddr @whitelist-v4 return
 		ip6 saddr @whitelist-v6 return
 		ip saddr @blacklist-v4 counter name "blacklist-v4" goto log-deny-block

@@ -1,18 +1,16 @@
+# try to reuse existing chains as jump targets
 chain forward {
 	type filter hook forward priority filter; policy drop;
-	
-	# reject invalid packets
 	jump ct-state-filter
 
-	# include services
 	include "./services.d/forward/*.nft"
 
-	# allow local forwards
+	# allow local icmpx forwarding only
 	ip saddr @private-net4 ip protocol icmp accept
 	ip daddr @private-net4 ip protocol icmp accept
 	ip6 saddr @private-net6 ip6 nexthdr ipv6-icmp accept
 	ip6 daddr @private-net6 ip6 nexthdr ipv6-icmp accept
 
-	# reject the rest
-	goto verdict
+	jump non-unicast-filter
+	goto reject-verdict
 }
