@@ -6,5 +6,6 @@ chain private {
 
 	# unreachable by design if the expression above is enabled
 	jump proto-filter
+	jump allow-icmp
 	goto reject-verdict
 }

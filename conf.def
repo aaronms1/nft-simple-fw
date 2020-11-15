@@ -19,6 +19,15 @@ define SET_PRIVATE_NETS_V6 = {
 	$NET_V6_UNIQUE_LOCAL
 }
 
+define SET_DISALLOW_ICMP_V4 = {
+	5, 12, 13, 14, 15, 16, 17, 18
+}
+
+# https://tools.ietf.org/html/rfc4890
+define SET_DISALLOW_ICMP_V6 = {
+	100, 101, 127, 137, 139, 140, 200, 201, 255
+}
+
 # service definitions for easy access
 ## syncthing
 define DPORT_TCP_SYNCTHING = 22000

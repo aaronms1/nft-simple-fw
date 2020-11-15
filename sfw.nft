@@ -15,6 +15,18 @@ table inet sfw {
 		elements = $SET_PRIVATE_NETS_V6
 	}
 
+	set icmp-v4 {
+		type icmp_type
+		flags constant
+		elements = $SET_DISALLOW_ICMP_V4
+	}
+
+	set icmp-v6 {
+		type icmpv6_type
+		flags constant
+		elements = $SET_DISALLOW_ICMP_V4
+	}
+
 	# invalid packets
 	counter invalid-pkts { packets 0 bytes 0 }
 	# !(tcp|udp) protocol packets dropped
@@ -33,9 +45,10 @@ table inet sfw {
 		type filter hook input priority filter; policy drop;
 		iif "lo" accept
 		jump ct-state-filter
-		iifgroup $IIFGROUP_ETHERNET goto trampoline
-		iifgroup $IIFGROUP_VPN goto vpn
-
+		iifgroup vmap {
+			$IIFGROUP_ETHERNET : goto trampoline,
+			$IIFGROUP_VPN : goto vpn
+		}
 		# basic filtering of unhandled iifgroups
 		counter name "iif-other" jump proto-filter
 		goto reject-verdict
@@ -46,6 +59,7 @@ table inet sfw {
 		ip6 saddr @private-net6 jump private
 		jump public
 		jump proto-filter
+		jump allow-icmp
 		goto reject-verdict
 	}
 
@@ -57,11 +71,20 @@ table inet sfw {
 	}
 
 	chain proto-filter {
-		ip protocol icmp accept
-		ip protocol igmp accept
-		ip6 nexthdr ipv6-icmp accept
+		jump icmp-filter
 		jump rt0-filter
 		jump non-unicast-filter
+	}
+
+	chain allow-icmp {
+		ip protocol icmp accept
+		ip6 nexthdr ipv6-icmp accept
+		ip protocol igmp accept
+	}
+
+	chain icmp-filter {
+		ip protocol icmp icmp type @icmp-v4 drop
+		ip6 nexthdr ipv6-icmp icmpv6 type @icmp-v6 drop
 	}
 
 	chain non-unicast-filter {
