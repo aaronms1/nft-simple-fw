@@ -62,12 +62,12 @@ table inet blackhole {
 	}
 
 	chain log-deny-block {
-		limit rate 5/minute burst 5 packets log prefix "blackholed (bl): " level debug flags ip options
+		limit rate 5/minute burst 5 packets log prefix "bh (bl):     " level debug flags ip options
 		${block_policy}
 	}
 
 	chain log-deny-country {
-		limit rate 5/minute burst 5 packets log prefix "blackholed (cn): " level debug flags ip options
+		limit rate 5/minute burst 5 packets log prefix "bh (cn):     " level debug flags ip options
 		${country_policy}
 	}
 }
