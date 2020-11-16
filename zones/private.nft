@@ -4,6 +4,6 @@ chain private {
 	# comment out the next line to not include public services
 	jump public-zone-svc
 	jump proto-filter
-	jump allow-icmp
+
 	goto reject-verdict
 }

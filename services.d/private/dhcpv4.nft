@@ -1,1 +1,1 @@
-ip saddr @private-net4 udp sport bootps udp dport bootpc accept comment "dhcpv4 renewals unicast"
+udp sport bootps udp dport bootpc accept comment "dhcpv4 renewals unicast"

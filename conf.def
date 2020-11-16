@@ -19,14 +19,18 @@ define SET_PRIVATE_NETS_V6 = {
 	$NET_V6_UNIQUE_LOCAL
 }
 
-define SET_DISALLOW_ICMP_V4 = {
-	5, 12, 13, 14, 15, 16, 17, 18
+define SET_ALLOW_ICMP_V4 = {
+	echo-reply,
+	destination-unreachable,
+	source-quench,
+	echo-request,
+	router-advertisement,
+	router-solicitation,
+	time-exceeded
 }
 
-# https://tools.ietf.org/html/rfc4890
-define SET_DISALLOW_ICMP_V6 = {
-	100, 101, 127, 137, 139, 140, 200, 201, 255
-}
+# types additional to the rfc4890 chain
+define SET_ALLOW_ICMP_V6 = { }
 
 # service definitions for easy access
 ## syncthing

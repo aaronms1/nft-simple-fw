@@ -1,18 +1,11 @@
 # try to reuse existing chains as jump targets
 chain forward {
 	type filter hook forward priority filter; policy drop;
-	
-	# call ct-state-filter manuall, since we don't traverse dispatch
+
+	# call ct-state-filter manually since we don't traverse dispatch
 	jump ct-state-filter
 	jump forward-zone-svc
 	jump proto-filter
-
-	# allow local icmpx forwarding only
-	# TODO: increase restrictiveness
-	ip saddr @private-net4 ip protocol icmp accept
-	ip daddr @private-net4 ip protocol icmp accept
-	ip6 saddr @private-net6 ip6 nexthdr ipv6-icmp accept
-	ip6 daddr @private-net6 ip6 nexthdr ipv6-icmp accept
 
 	goto reject-verdict
 }

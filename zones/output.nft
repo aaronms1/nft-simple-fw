@@ -1,7 +1,3 @@
 chain output {
 	type filter hook output priority filter; policy accept;
-	
-	# call ct-state-filter manuall, since we don't traverse dispatch
-	#jump ct-state-filter
-	#jump output-zone-svc
 }
