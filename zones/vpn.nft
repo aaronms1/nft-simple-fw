@@ -1,4 +1,4 @@
 chain vpn {
-	include "./services.d/vpn/*.nft"
+	jump vpn-zone-svc
 	accept
 }

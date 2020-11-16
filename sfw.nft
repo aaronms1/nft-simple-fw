@@ -46,7 +46,7 @@ table inet sfw {
 		iif "lo" accept
 		jump ct-state-filter
 		iifgroup vmap {
-			$IIFGROUP_ETHERNET : goto trampoline,
+			$IIFGROUP_ETHERNET : goto input-zone-dispatch,
 			$IIFGROUP_VPN : goto vpn
 		}
 		# basic filtering of unhandled iifgroups
@@ -54,20 +54,10 @@ table inet sfw {
 		goto reject-verdict
 	}
 
-	chain trampoline {
-		ip saddr @private-net4 jump private
-		ip6 saddr @private-net6 jump private
-		jump public
-		jump proto-filter
-		jump allow-icmp
-		goto reject-verdict
-	}
-
-	chain reject-verdict {
-		meta l4proto udp reject
-		meta l4proto tcp reject with tcp reset
-		counter name "catchall" reject with icmpx type port-unreachable
-		# end of matching
+	chain input-zone-dispatch {
+		ip saddr != @private-net4 goto public
+		ip6 saddr != @private-net6 goto public
+		goto private
 	}
 
 	chain proto-filter {
@@ -83,17 +73,18 @@ table inet sfw {
 	}
 
 	chain icmp-filter {
-		ip protocol icmp icmp type @icmp-v4 drop
-		ip6 nexthdr ipv6-icmp icmpv6 type @icmp-v6 drop
+		# filter potentially dangerous icmp types
+		ip protocol icmp icmp type @icmp-v4 goto log-drop
+		ip6 nexthdr ipv6-icmp icmpv6 type @icmp-v6 goto log-drop
 	}
 
 	chain non-unicast-filter {
 		# silently drop unsolicited broadcast/multicast
-		meta pkttype { broadcast, multicast } counter name "non-unicast" drop
+		meta pkttype { broadcast, multicast } counter name "non-unicast" goto log-drop
 	}
 
 	chain ct-state-filter {
-		# stateful filtering
+		# stateful filtering and packet fastpath
 		ct state established,related accept
 		ct state invalid counter name "invalid-pkts" drop
 	}
@@ -103,16 +94,59 @@ table inet sfw {
 		type filter hook prerouting priority raw; policy drop;
 		fib saddr . iif oif exists accept
 		counter name "no-reverse-path"
+		goto log-drop
 	}
 
 	chain rt0-filter {
 		# disallow ipv6 type 0 routing headers
-		rt type 0 counter name "type0-header" reject with icmpv6 type addr-unreachable
+		rt type 0 counter name "type0-header" goto log6-reject-addr-unreachable
 	}
+
+	chain reject-verdict {
+		meta l4proto udp goto logx-reject-port-unreachable
+		meta l4proto tcp goto logx-reject-tcp-reset
+		counter name "catchall" goto logx-reject-port-unreachable
+	}
+
+	chain log6-reject-addr-unreachable {
+		jump log-reject
+		reject with icmpv6 type addr-unreachable comment "icmpv6 addr-unreachable"
+		# end of rule traversal
+	}
+
+	chain logx-reject-port-unreachable {
+		jump log-reject
+		reject comment "icmpx port-unreachable"
+		# end of rule traversal
+	}
+
+	chain logx-reject-tcp-reset {
+		jump log-reject
+		reject with tcp reset comment "icmpx tcp reset"
+		# end of rule traversal
+	}
+
+	chain log-reject {
+		# if called, the subsequent rules *must* include an absolute reject verdict
+		# this allows to specify a custom "reject with" when this chain returns
+		limit rate 5/minute burst 5 packets log prefix "sfw (reject): " level debug flags ip options
+	}
+
+	chain log-drop {
+		limit rate 5/minute burst 5 packets log prefix "sfw (drop): " level debug flags ip options
+		drop comment "log dropped packet"
+		# end of rule traversal
+	}
+
+	chain vpn-zone-svc     { include "./services.d/vpn/*.nft";     }
+	chain private-zone-svc { include "./services.d/private/*.nft"; }
+	chain public-zone-svc  { include "./services.d/public/*.nft";  }
+	chain forward-zone-svc { include "./services.d/forward/*.nft"; }
+	chain output-zone-svc  { include "./services.d/output/*.nft";  }
 
 	include "./zones/vpn.nft"
 	include "./zones/private.nft"
 	include "./zones/public.nft"
-	include "./zones/output.nft"
 	include "./zones/forward.nft"
+	include "./zones/output.nft"
 }

@@ -1,4 +1,7 @@
 chain output {
 	type filter hook output priority filter; policy accept;
-	include "./services.d/output/*.nft"
+	
+	# call ct-state-filter manuall, since we don't traverse dispatch
+	#jump ct-state-filter
+	#jump output-zone-svc
 }

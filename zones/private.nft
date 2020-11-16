@@ -1,10 +1,8 @@
 chain private {
-	include "./services.d/private/*.nft"
-
+	# ct-state-filter is called by dispatch for performance reasons
+	jump private-zone-svc
 	# comment out the next line to not include public services
-	return comment "return to trampoline; include public services"
-
-	# unreachable by design if the expression above is enabled
+	jump public-zone-svc
 	jump proto-filter
 	jump allow-icmp
 	goto reject-verdict

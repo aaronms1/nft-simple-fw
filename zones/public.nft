@@ -1,3 +1,7 @@
 chain public {
-	include "./services.d/public/*.nft"
+	# ct-state-filter is called by dispatch for performance reasons
+	jump public-zone-svc
+	jump proto-filter
+	jump allow-icmp
+	goto reject-verdict
 }
