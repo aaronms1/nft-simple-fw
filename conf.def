@@ -32,6 +32,11 @@ define SET_ALLOW_ICMP_V4 = {
 # types additional to the rfc4890 chain
 define SET_ALLOW_ICMP_V6 = { }
 
+# log format (log-{drop,reject} / log-{drop,reject}-nf)
+# see log.nft for details
+define CHAIN_LOG_DISPATCH_DROP = log-drop
+define CHAIN_LOG_DISPATCH_REJECT = log-reject
+
 # service definitions for easy access
 ## syncthing
 define DPORT_TCP_SYNCTHING = 22000
