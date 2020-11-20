@@ -1,0 +1,33 @@
+# kernel log
+chain log-reject {
+	# if called, the subsequent rules *must* include an absolute reject verdict
+	# this allows specifying a reject method on return
+	counter name "reject-total" comment "total packets rejected"
+	limit rate 5/minute burst 5 packets \
+		log prefix "[fw (reject)]: "  level debug flags ip options
+}
+
+chain log-drop {
+	counter name "drop-total" comment "total packets dropped"
+	limit rate 5/minute burst 5 packets \
+		log prefix "[fw (drop)]: " level debug flags ip options
+	drop comment "drop packet"
+	# end of rule traversal
+}
+
+# NFLOG userspace logging
+chain log-reject-nf {
+	# if called, the subsequent rules *must* include an absolute reject verdict
+	# this allows specifying a reject method on return
+	counter name "reject-total" comment "total packets rejected"
+	limit rate 5/minute burst 5 packets \
+		log prefix "[fw (reject)]: " group 1
+}
+
+chain log-drop-nf {
+	counter name "drop-total" comment "total packets dropped"
+	limit rate 5/minute burst 5 packets \
+		log prefix "[fw (drop)]: " group 1
+	drop comment "drop packet"
+	# end of rule traversal
+}

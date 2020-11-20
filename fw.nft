@@ -2,6 +2,7 @@
 
 table inet fw {
 	include "./conf.def"
+	include "./log.nft"
 
 	# invalid packets
 	counter ct-invalid { packets 0 bytes 0 }
@@ -73,9 +74,9 @@ table inet fw {
 
 	chain proto-filter {
 		jump icmp-dispatch
-		ip protocol igmp goto log-drop
+		ip protocol igmp goto $CHAIN_LOG_DISPATCH_DROP
 		# drop unsolicited broadcast/multicast
-		meta pkttype { broadcast, multicast } counter name "non-unicast" goto log-drop
+		meta pkttype { broadcast, multicast } counter name "non-unicast" goto $CHAIN_LOG_DISPATCH_DROP
 		# disallow ipv6 type 0 routing headers
 		rt type 0 counter name "type0-header" goto log6-reject-addr-unreachable
 	}
@@ -83,14 +84,14 @@ table inet fw {
 	chain ct-state-filter {
 		# stateful filtering and packet fastpath
 		ct state established,related accept
-		ct state invalid counter name "ct-invalid" goto log-drop
+		ct state invalid counter name "ct-invalid" goto $CHAIN_LOG_DISPATCH_DROP
 	}
 
 	chain rp-filter {
 		# reverse path filter for ipv6
 		type filter hook prerouting priority raw; policy drop;
 		fib saddr . iif oif exists accept
-		counter name "no-reverse-path" goto log-drop
+		counter name "no-reverse-path" goto $CHAIN_LOG_DISPATCH_DROP
 	}
 
 	chain icmpv6-filter {
@@ -98,12 +99,12 @@ table inet fw {
 		icmpv6 type @set_icmpv6 accept
 		# and all essential types according to rfc4890
 		jump rfc4890
-		counter name "unwanted-icmpv6" goto log-drop 
+		counter name "unwanted-icmpv6" goto $CHAIN_LOG_DISPATCH_DROP 
 	}
 
 	chain icmpv4-filter {
 		icmp type @set_icmpv4 accept
-		counter name "unwanted-icmp" goto log-drop
+		counter name "unwanted-icmp" goto $CHAIN_LOG_DISPATCH_DROP
 	}
 
 	chain rfc4890 {
@@ -151,46 +152,32 @@ table inet fw {
 		counter name "catchall" goto logx-reject-port-unreachable
 	}
 
-	chain log-reject {
-		# if called, the subsequent rules *must* include an absolute reject verdict
-		# this allows specifying a reject method on return
-		counter name "reject-total" comment "total packets rejected"
-		limit rate 5/minute burst 5 packets \
-			log prefix "fw (reject): " level debug flags ip options
-	}
-
-	chain log-drop {
-		counter name "drop-total" comment "total packets dropped"
-		limit rate 5/minute burst 5 packets \
-			log prefix "fw (drop):   " level debug flags ip options
-		drop comment "drop packet"
-		# end of rule traversal
-	}
-
 	chain log6-reject-addr-unreachable {
-		jump log-reject
+		jump $CHAIN_LOG_DISPATCH_REJECT
 		reject with icmpv6 type addr-unreachable comment "icmpv6 addr-unreachable"
 		# end of rule traversal
 	}
 
 	chain logx-reject-port-unreachable {
-		jump log-reject
+		jump $CHAIN_LOG_DISPATCH_REJECT
 		reject comment "icmpx port-unreachable"
 		# end of rule traversal
 	}
 
 	chain logx-reject-tcp-reset {
-		jump log-reject
+		jump $CHAIN_LOG_DISPATCH_REJECT
 		reject with tcp reset comment "icmpx tcp reset"
 		# end of rule traversal
 	}
 
+	# reusable service jump targets
 	chain vpn-zone-svc     { include "./services.d/vpn/*.nft";     }
 	chain private-zone-svc { include "./services.d/private/*.nft"; }
 	chain public-zone-svc  { include "./services.d/public/*.nft";  }
 	chain forward-zone-svc { include "./services.d/forward/*.nft"; }
 	chain output-zone-svc  { include "./services.d/output/*.nft";  }
 
+	# zones
 	include "./zones/vpn.nft"
 	include "./zones/private.nft"
 	include "./zones/public.nft"

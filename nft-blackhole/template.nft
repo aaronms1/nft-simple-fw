@@ -41,6 +41,8 @@ table inet blackhole {
 	counter country-v6 { packets 0 bytes 0; }
 
 	define filter_iifgroup = 1
+	define log_chain_block = log-deny-block
+	define log_chain_country = log-deny-country
 
 	# input(filter()) -> accept
 
@@ -55,19 +57,29 @@ table inet blackhole {
 		meta pkttype { broadcast, multicast } return
 		ip saddr @whitelist-v4 return
 		ip6 saddr @whitelist-v6 return
-		ip saddr @blacklist-v4 counter name "blacklist-v4" goto log-deny-block
-		ip6 saddr @blacklist-v6 counter name "blacklist-v6" goto log-deny-block
-		ip saddr @country-v4 counter name "country-v4" goto log-deny-country
-		ip6 saddr @country-v6 counter name "country-v6" goto log-deny-country
+		ip saddr @blacklist-v4 counter name "blacklist-v4" goto $$log_chain_block
+		ip6 saddr @blacklist-v6 counter name "blacklist-v6" goto $$log_chain_block
+		ip saddr @country-v4 counter name "country-v4" goto $$log_chain_country
+		ip6 saddr @country-v6 counter name "country-v6" goto $$log_chain_country
 	}
-
+	
 	chain log-deny-block {
-		limit rate 5/minute burst 5 packets log prefix "bh (bl):     " level debug flags ip options
+		limit rate 5/minute burst 5 packets log prefix "[bh (bl)]: " level debug flags ip options
 		${block_policy}
 	}
 
 	chain log-deny-country {
-		limit rate 5/minute burst 5 packets log prefix "bh (cn):     " level debug flags ip options
+		limit rate 5/minute burst 5 packets log prefix "[bh (cn)]: " level debug flags ip options
+		${country_policy}
+	}
+
+	chain log-deny-block-nf {
+		limit rate 5/minute burst 5 packets log prefix "[bh (bl)]: " group 2 
+		${block_policy}
+	}
+
+	chain log-deny-country-nf {
+		limit rate 5/minute burst 5 packets log prefix "[bh (cn)]: " group 2
 		${country_policy}
 	}
 }
