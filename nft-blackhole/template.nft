@@ -41,13 +41,14 @@ table inet blackhole {
 	counter country-v6 { packets 0 bytes 0; }
 
 	define filter_iifgroup = 1
+	define hook_priority = -1
 	define log_chain_block = log-deny-block
 	define log_chain_country = log-deny-country
 
 	# input(filter()) -> accept
 
 	chain input {
-		type filter hook input priority -1; policy accept
+		type filter hook input priority $$hook_priority; policy accept
 		iif "lo" accept
 		iifgroup $$filter_iifgroup jump filter
 	}

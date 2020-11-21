@@ -49,7 +49,7 @@ table inet fw {
 	}
 
 	chain iif-dispatch {
-		type filter hook input priority filter; policy drop;
+		type filter hook input priority $HOOK_FILTER_PRIORITY; policy drop;
 		iif "lo" accept
 		jump ct-state-filter
 		iifgroup vmap {

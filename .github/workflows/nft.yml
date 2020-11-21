@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install nftables
+        run: >-
+          sudo sh -c '
+          apt-get update;
+          apt-get -y install nftables;'
+      - name: Load ruleset
+        run: |
+          sudo nft flush ruleset
+          sudo nft -I $(pwd) -f ./fw.nft
+      - name: Check rule count
+        run: (( $(sudo nft list ruleset | wc -l) > 50 ))

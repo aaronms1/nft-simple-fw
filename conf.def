@@ -1,4 +1,7 @@
-# generic variables
+# fw filter priority (filter = 0)
+define HOOK_FILTER_PRIORITY = filter
+
+# link-local / unique-local addresses
 define NET_V6_LINK_LOCAL = fe80::/10
 define NET_V6_UNIQUE_LOCAL = fc00::/7
 
@@ -30,7 +33,12 @@ define SET_ALLOW_ICMP_V4 = {
 }
 
 # types additional to the rfc4890 chain
-define SET_ALLOW_ICMP_V6 = { }
+# dummy values as a workaround for nftables < 0.9.7
+# https://git.netfilter.org/nftables/commit/?id=9297f5b5301b76bb24513b114f905e6fac0a90cd
+define SET_ALLOW_ICMP_V6 = {
+	echo-request,
+	echo-reply
+}
 
 # log format (log-{drop,reject} / log-{drop,reject}-nf)
 # see log.nft for details
