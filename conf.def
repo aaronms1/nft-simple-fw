@@ -1,13 +1,16 @@
 # fw filter priority (filter = 0)
 define HOOK_FILTER_PRIORITY = filter
 
-# link-local / unique-local addresses
-define NET_V6_LINK_LOCAL = fe80::/10
-define NET_V6_UNIQUE_LOCAL = fc00::/7
-
 # interface groups
 define IIFGROUP_ETHERNET = 1
 define IIFGROUP_VPN = 2
+
+# packets marked with this id are not filtered
+define META_MARK_FASTPATH_ID = 0xabad1dea
+
+# link-local / unique-local addresses
+define NET_V6_LINK_LOCAL = fe80::/10
+define NET_V6_UNIQUE_LOCAL = fc00::/7
 
 # private network sets
 define SET_PRIVATE_NETS_V4 = {
@@ -40,7 +43,7 @@ define SET_ALLOW_ICMP_V6 = {
 	echo-reply
 }
 
-# log format (log-{drop,reject} / log-{drop,reject}-nf)
+# log format (log-{drop,reject} / nflog-{drop,reject})
 # see log.nft for details
 define CHAIN_LOG_DISPATCH_DROP = log-drop
 define CHAIN_LOG_DISPATCH_REJECT = log-reject

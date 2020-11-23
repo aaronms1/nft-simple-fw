@@ -2,10 +2,15 @@
 chain forward {
 	type filter hook forward priority filter; policy drop;
 
-	# call ct-state-filter manually since we don't traverse dispatch
-	jump ct-state-filter
+	# call ct-mark-filter manually since we don't traverse dispatch
+	jump ct-mark-filter
+
 	jump forward-zone-svc
 	jump proto-filter
+
+	# forward for local subnets
+	ip saddr @set_private_net4 accept
+	ip6 saddr @set_private_net6 accept
 
 	goto reject-verdict
 }

@@ -1,5 +1,5 @@
 chain public {
-	# ct-state-filter is called by dispatch for performance reasons
+	# ct-mark-filter is called by dispatch for performance reasons
 	jump public-zone-svc
 	jump proto-filter
 	

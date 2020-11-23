@@ -51,11 +51,14 @@ table inet fw {
 	chain iif-dispatch {
 		type filter hook input priority $HOOK_FILTER_PRIORITY; policy drop;
 		iif "lo" accept
-		jump ct-state-filter
+		jump ct-mark-filter
+
 		iifgroup vmap {
 			$IIFGROUP_ETHERNET : goto input-zone-dispatch,
-			$IIFGROUP_VPN : goto vpn
+			$IIFGROUP_VPN : goto vpn,
+			"default" : goto default
 		}
+
 		# basic filtering of unhandled iifgroups
 		counter name "iif-other" jump proto-filter
 		goto reject-verdict
@@ -81,10 +84,10 @@ table inet fw {
 		rt type 0 counter name "type0-header" goto log6-reject-addr-unreachable
 	}
 
-	chain ct-state-filter {
-		# stateful filtering and packet fastpath
+	chain ct-mark-filter {
 		ct state established,related accept
 		ct state invalid counter name "ct-invalid" goto $CHAIN_LOG_DISPATCH_DROP
+		meta mark $META_MARK_FASTPATH_ID accept
 	}
 
 	chain rp-filter {
@@ -183,4 +186,5 @@ table inet fw {
 	include "./zones/public.nft"
 	include "./zones/forward.nft"
 	include "./zones/output.nft"
+	include "./zones/default.nft"
 }

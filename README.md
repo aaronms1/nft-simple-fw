@@ -7,10 +7,11 @@ Uses performant [interface group](https://www.freedesktop.org/software/systemd/m
 
 ## default zone policies
 
-### filter type
+### filter zones
 
-- public, private, forward: `reject`
-- vpn, output: `accept`
+- public, private, forward: reject
+- default: reject
+- vpn, output: accept
 
 ## Usage
 
