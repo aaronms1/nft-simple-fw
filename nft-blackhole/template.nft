@@ -42,8 +42,8 @@ table inet blackhole {
 
 	define filter_iifgroup = 1
 	define hook_priority = -1
-	define log_chain_block = log-deny-block
-	define log_chain_country = log-deny-country
+	define log_chain_block = log-block
+	define log_chain_country = log-country
 
 	# input(filter()) -> accept
 
@@ -64,22 +64,22 @@ table inet blackhole {
 		ip6 saddr @country-v6 counter name "country-v6" goto $$log_chain_country
 	}
 	
-	chain log-deny-block {
+	chain log-block {
 		limit rate 5/minute burst 5 packets log prefix "[bh (bl)]: " level debug flags ip options
 		${block_policy}
 	}
 
-	chain log-deny-country {
+	chain log-country {
 		limit rate 5/minute burst 5 packets log prefix "[bh (cn)]: " level debug flags ip options
 		${country_policy}
 	}
 
-	chain log-deny-block-nf {
+	chain nflog-block {
 		limit rate 5/minute burst 5 packets log prefix "[bh (bl)]: " group 2 
 		${block_policy}
 	}
 
-	chain log-deny-country-nf {
+	chain nflog-country {
 		limit rate 5/minute burst 5 packets log prefix "[bh (cn)]: " group 2
 		${country_policy}
 	}

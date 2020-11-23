@@ -1,0 +1,13 @@
+chain default {
+	# Packets not belonging to any interface group traverse this chain.
+	# This is usually for handling traffic originating from inside containers
+	# addressed to the host itself, i.e. not forwarded but coming from e.g.
+	# cni-podman* or docker-* interfaces.
+
+	jump proto-filter
+
+	ip saddr @set_private_net4 accept
+	ip6 saddr @set_private_net6 accept
+	
+	goto reject-verdict
+}

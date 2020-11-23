@@ -16,7 +16,7 @@ chain log-drop {
 }
 
 # NFLOG userspace logging
-chain log-reject-nf {
+chain nflog-reject {
 	# if called, the subsequent rules *must* include an absolute reject verdict
 	# this allows specifying a reject method on return
 	counter name "reject-total" comment "total packets rejected"
@@ -24,7 +24,7 @@ chain log-reject-nf {
 		log prefix "[fw (reject)]: " group 1
 }
 
-chain log-drop-nf {
+chain nflog-drop {
 	counter name "drop-total" comment "total packets dropped"
 	limit rate 5/minute burst 5 packets \
 		log prefix "[fw (drop)]: " group 1

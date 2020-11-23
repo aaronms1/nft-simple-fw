@@ -23,6 +23,6 @@ jobs:
       - name: Load ruleset
         run: |
           sudo nft flush ruleset
-          sudo nft -I $(pwd) -f ./fw.nft
+          sudo nft -I $(pwd) -ef ./fw.nft
       - name: Check rule count
-        run: (( $(sudo nft list ruleset | wc -l) > 50 ))
+        run: (( $(sudo nft -nst list ruleset | wc -l) > 20 ))
