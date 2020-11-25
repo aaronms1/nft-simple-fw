@@ -1,2 +1,0 @@
-# podman container
-ip daddr @set_private_net4 tcp dport $DPORT_TCP_WORMHOLE accept comment "magic-wormhole-(relay,mailbox) container"

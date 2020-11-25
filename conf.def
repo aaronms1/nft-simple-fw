@@ -1,30 +1,39 @@
 # fw filter priority (filter = 0)
 define HOOK_FILTER_PRIORITY = filter
 
-# interface groups
+# Interface groups
 define IIFGROUP_ETHERNET = 1
 define IIFGROUP_VPN = 2
 
-# packets marked with this id are not filtered
-define META_MARK_FASTPATH_ID = 0xabad1dea
-
-# link-local / unique-local addresses
-define NET_V6_LINK_LOCAL = fe80::/10
+# Unique-local addresses
 define NET_V6_UNIQUE_LOCAL = fc00::/7
 
-# private network sets
-define SET_PRIVATE_NETS_V4 = {
-	10.0.0.0/8,
-	169.254.0.0/16,
-	172.16.0.0/12,
-	192.168.0.0/16
-}
+# dummy values
+# https://git.netfilter.org/nftables/commit/?id=9297f5b5301b76bb24513b114f905e6fac0a90cd
+define dummy_v4 = 192.0.2.0/24
+define dummy_v6 = 2001:db8::/32
 
-define SET_PRIVATE_NETS_V6 = {
-	$NET_V6_LINK_LOCAL,
-	$NET_V6_UNIQUE_LOCAL
-}
+# Packets marked with this id bypass filtering
+define META_MARK_FASTPATH_ID = 0xabad1dea
 
+# default verdict chain
+# Values: {reject, drop}-verdict
+define DEFAULT_VERDICT = reject-verdict
+
+# Interface agnostic allow-/blocklists, skips further filtering
+# Default timeout: 1d
+# Contains dummy values and ip scanning networks like censys
+define SET_ALLOW_NETS_V4 = { $dummy_v4 timeout 1s }
+define SET_BLOCK_NETS_V4 = { $dummy_v4  timeout 1s }
+
+define SET_ALLOW_NETS_V6 = { $dummy_v6 timeout 1s }
+define SET_BLOCK_NETS_V6 = { $dummy_v6 timeout 1s }
+
+# The verdict chain for the blocklists
+# Values: $DEFAULT_VERDICT, {reject,drop}-verdict
+define LIST_BLOCK_MODE = drop-verdict
+
+# Only allow listed icmpv4 types
 define SET_ALLOW_ICMP_V4 = {
 	echo-reply,
 	destination-unreachable,
@@ -35,21 +44,31 @@ define SET_ALLOW_ICMP_V4 = {
 	time-exceeded
 }
 
-# types additional to the rfc4890 chain
-# dummy values as a workaround for nftables < 0.9.7
-# https://git.netfilter.org/nftables/commit/?id=9297f5b5301b76bb24513b114f905e6fac0a90cd
+# Types additional to the rfc4890 chain
+# Contains dummy values
 define SET_ALLOW_ICMP_V6 = {
 	echo-request,
 	echo-reply
 }
 
-# log format (log-{drop,reject} / nflog-{drop,reject})
-# see log.nft for details
+# Log format, see log.nft for details
+# Values: log-{drop,reject}, nflog-{drop,reject}
 define CHAIN_LOG_DISPATCH_DROP = log-drop
 define CHAIN_LOG_DISPATCH_REJECT = log-reject
 
+# Scanner networks, include from file due to size
+include "./scanner.def"
 
-# service definitions for easy access
+# Packets from static netblocks, dropped unconditionally
+define SET_STATIC_DROP_V4 = {
+	$dummy_v4,
+	$SCANNER_V4
+}
+
+define SET_STATIC_DROP_V6 = { $dummy_v6 }
+
+# Service definitions for easier access
+# Can be referenced in service files
 ## syncthing
 define DPORT_TCP_SYNCTHING = 22000
 define DPORT_UDP_SYNCTHING = 21027
@@ -57,3 +76,5 @@ define DPORT_UDP_SYNCTHING = 21027
 define DPORT_TCP_WIREGUARD = 51820
 ## magic-wormhole
 define DPORT_TCP_WORMHOLE = 4000-4001
+
+# vim: set ft=nft

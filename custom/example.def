@@ -1,0 +1,2 @@
+# *.def and *.nft files are included from this directory.
+# This allows custom rules without modifying fw.nft.

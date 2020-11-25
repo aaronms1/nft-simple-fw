@@ -5,5 +5,5 @@ chain private {
 	jump public-zone-svc
 	jump proto-filter
 
-	goto reject-verdict
+	goto $DEFAULT_VERDICT
 }

@@ -4,10 +4,12 @@ chain default {
 	# addressed to the host itself, i.e. not forwarded but coming from e.g.
 	# cni-podman* or docker-* interfaces.
 
+	jump default-zone-svc
 	jump proto-filter
 
-	ip saddr @set_private_net4 accept
-	ip6 saddr @set_private_net6 accept
+	# accept all (bridged) veth traffic to the host
+	ip saddr @set_private_net_v4 accept
+	ip6 saddr @set_private_net_v6 accept
 	
-	goto reject-verdict
+	goto $DEFAULT_VERDICT
 }
