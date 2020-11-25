@@ -9,11 +9,8 @@ chain forward {
 	jump proto-filter
 
 	# forward for local subnets
-	ip saddr @set_private_net4 accept
-	ip6 saddr @set_private_net6 accept
+	ip saddr @set_private_net_v4 accept
+	ip6 saddr @set_private_net_v6 accept
 
-	# forward all marked traffic
-	mark $META_MARK_FASTPATH_ID accept
-
-	goto reject-verdict
+	goto $DEFAULT_VERDICT
 }

@@ -19,39 +19,106 @@ table inet fw {
 	# dropped icmp packets
 	counter unwanted-icmp { packets 0 bytes 0 }
 	counter unwanted-icmpv6 { packets 0 bytes 0 }
+	# dropped blocklist packets
+	counter block-static { packets 0 bytes 0 }
+	counter block-dynamic { packets 0 bytes 0 }
 	# reject total
 	counter reject-total { packets 0 bytes 0 }
 	# dropped total
 	counter drop-total { packets 0 bytes 0 }
 
-	set set_private_net4 {
+	define NET_V6_LINK_LOCAL = fe80::/10
+
+	set set_private_net_v4 {
 		type ipv4_addr
 		flags constant,interval
-		elements = $SET_PRIVATE_NETS_V4
+		elements = {
+			10.0.0.0/8,
+			169.254.0.0/16,
+			172.16.0.0/12,
+			192.168.0.0/16
+		}
 	}
 
-	set set_private_net6 {
+	set set_private_net_v6 {
 		type ipv6_addr
 		flags constant,interval
-		elements = $SET_PRIVATE_NETS_V6
+		elements = {
+			$NET_V6_LINK_LOCAL,
+			$NET_V6_UNIQUE_LOCAL
+		}
 	}
 
-	set set_icmpv4 {
+	set set_icmp_v4 {
 		type icmp_type
 		flags constant
 		elements = $SET_ALLOW_ICMP_V4
 	}
 
-	set set_icmpv6 {
+	set set_icmp_v6 {
 		type icmpv6_type
 		flags constant
 		elements = $SET_ALLOW_ICMP_V6
+	}
+
+	# static list, primarily for scanner networks
+	set set_drop_v4 {
+		type ipv4_addr
+		flags constant,interval
+		auto-merge
+		elements = $SET_STATIC_DROP_V4
+	}
+
+	set set_drop_v6 {
+		type ipv6_addr
+		flags constant,interval
+		auto-merge
+		elements = $SET_STATIC_DROP_V6
+	}
+
+	# dynamic lists with timeout
+	set set_allowlist_v4 {
+		type ipv4_addr
+		flags interval,timeout
+		timeout 1d
+		gc-interval 1m
+		auto-merge
+		elements = $SET_ALLOW_NETS_V4
+	}
+
+	set set_blocklist_v4 {
+		type ipv4_addr
+		flags interval,timeout
+		timeout 1d
+		gc-interval 1m
+		auto-merge
+		elements = $SET_BLOCK_NETS_V4
+	}
+
+	set set_allowlist_v6 {
+		type ipv6_addr
+		flags interval,timeout
+		timeout 1d
+		gc-interval 1m
+		auto-merge
+		elements = $SET_ALLOW_NETS_V6
+	}
+
+	set set_blocklist_v6 {
+		type ipv6_addr
+		flags interval,timeout
+		timeout 1d
+		gc-interval 1m
+		auto-merge
+		elements = $SET_BLOCK_NETS_V6
 	}
 
 	chain iif-dispatch {
 		type filter hook input priority $HOOK_FILTER_PRIORITY; policy drop;
 		iif "lo" accept
 		jump ct-mark-filter
+		# source address based allow-/blocklist
+		jump xlist-dispatch
 
 		iifgroup vmap {
 			$IIFGROUP_ETHERNET : goto input-zone-dispatch,
@@ -61,18 +128,33 @@ table inet fw {
 
 		# basic filtering of unhandled iifgroups
 		counter name "iif-other" jump proto-filter
-		goto reject-verdict
+		goto $DEFAULT_VERDICT
 	}
 
 	chain input-zone-dispatch {
-		ip saddr @set_private_net4 goto private
-		ip6 saddr @set_private_net6 goto private
+		ip saddr @set_private_net_v4 goto private
+		ip6 saddr @set_private_net_v6 goto private
 		goto public
 	}
 
 	chain icmp-dispatch {
-		ip6 nexthdr ipv6-icmp goto icmpv6-filter
 		ip protocol icmp goto icmpv4-filter
+		ip6 nexthdr ipv6-icmp goto icmpv6-filter
+	}
+
+	chain xlist-dispatch {
+		ip saddr @set_allowlist_v4 accept
+		ip6 saddr @set_allowlist_v6 accept
+		# packets from static lists are always dropped
+		ip saddr @set_drop_v4 counter name "block-static" \
+			goto $CHAIN_LOG_DISPATCH_DROP
+		ip6 saddr @set_drop_v6 counter name "block-static" \
+			goto $CHAIN_LOG_DISPATCH_DROP
+		# packets from dynamic lists respect chosen block mode
+		ip saddr @set_blocklist_v4 counter name "block-dynamic" \
+			goto $LIST_BLOCK_MODE
+		ip6 saddr @set_blocklist_v6 counter name "block-dynamic" \
+			goto $LIST_BLOCK_MODE
 	}
 
 	chain proto-filter {
@@ -87,7 +169,8 @@ table inet fw {
 	chain ct-mark-filter {
 		ct state established,related accept
 		ct state invalid counter name "ct-invalid" goto $CHAIN_LOG_DISPATCH_DROP
-		meta mark $META_MARK_FASTPATH_ID accept
+		ct mark $MARK_FASTPATH_ID accept
+		meta mark $MARK_FASTPATH_ID accept
 	}
 
 	chain rp-filter {
@@ -99,14 +182,14 @@ table inet fw {
 
 	chain icmpv6-filter {
 		# allow configured types
-		icmpv6 type @set_icmpv6 accept
+		icmpv6 type @set_icmp_v6 accept
 		# and all essential types according to rfc4890
 		jump rfc4890
 		counter name "unwanted-icmpv6" goto $CHAIN_LOG_DISPATCH_DROP 
 	}
 
 	chain icmpv4-filter {
-		icmp type @set_icmpv4 accept
+		icmp type @set_icmp_v4 accept
 		counter name "unwanted-icmp" goto $CHAIN_LOG_DISPATCH_DROP
 	}
 
@@ -155,6 +238,11 @@ table inet fw {
 		counter name "catchall" goto logx-reject-port-unreachable
 	}
 
+	chain drop-verdict {
+		# prefer calling CHAIN_LOG_DISPATCH_DROP directly
+		goto $CHAIN_LOG_DISPATCH_DROP
+	}
+
 	chain log6-reject-addr-unreachable {
 		jump $CHAIN_LOG_DISPATCH_REJECT
 		reject with icmpv6 type addr-unreachable comment "icmpv6 addr-unreachable"
@@ -174,11 +262,12 @@ table inet fw {
 	}
 
 	# reusable service jump targets
-	chain vpn-zone-svc     { include "./services.d/vpn/*.nft";     }
-	chain private-zone-svc { include "./services.d/private/*.nft"; }
-	chain public-zone-svc  { include "./services.d/public/*.nft";  }
-	chain forward-zone-svc { include "./services.d/forward/*.nft"; }
-	chain output-zone-svc  { include "./services.d/output/*.nft";  }
+	chain vpn-zone-svc     { include "./services/vpn.zone.d/*.nft";     }
+	chain private-zone-svc { include "./services/private.zone.d/*.nft"; }
+	chain public-zone-svc  { include "./services/public.zone.d/*.nft";  }
+	chain forward-zone-svc { include "./services/forward.zone.d/*.nft"; }
+	chain output-zone-svc  { include "./services/output.zone.d/*.nft";  }
+	chain default-zone-svc { include "./services/default.zone.d/*.nft"; }
 
 	# zones
 	include "./zones/vpn.nft"
@@ -187,4 +276,9 @@ table inet fw {
 	include "./zones/forward.nft"
 	include "./zones/output.nft"
 	include "./zones/default.nft"
+
+	# custom rules
+	#include "./custom/*.[def,nft]"
+	include "./custom/*.def"
+	include "./custom/*.nft"
 }
