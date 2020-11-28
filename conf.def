@@ -8,7 +8,7 @@ define IIFGROUP_VPN = 2
 # Unique-local addresses
 define NET_V6_UNIQUE_LOCAL = fc00::/7
 
-# dummy values
+# Dummy values
 # https://git.netfilter.org/nftables/commit/?id=9297f5b5301b76bb24513b114f905e6fac0a90cd
 define dummy_v4 = 192.0.2.0/24
 define dummy_v6 = 2001:db8::/32
@@ -16,7 +16,7 @@ define dummy_v6 = 2001:db8::/32
 # Packets marked with this id bypass filtering
 define MARK_FASTPATH_ID = 0xabad1dea
 
-# default verdict chain
+# Default verdict chain
 # Values: {reject, drop}-verdict
 define DEFAULT_VERDICT = reject-verdict
 
@@ -56,15 +56,14 @@ define SET_ALLOW_ICMP_V6 = {
 define CHAIN_LOG_DISPATCH_DROP = log-drop
 define CHAIN_LOG_DISPATCH_REJECT = log-reject
 
-# Scanner networks, include from file due to size
+# Packets from static netblocks, handled in the xlist-lookup chain
+# Useful for blocking large unwanted network ranges (INPUT)
+# and allowing native public IPv6 inter-container communication (FORWARD)
+define SET_STATIC_ALLOW_V4 = { $dummy_v4 }
 include "./scanner.def"
-
-# Packets from static netblocks, dropped unconditionally
-define SET_STATIC_DROP_V4 = {
-	$dummy_v4,
-	$SCANNER_V4
-}
-
+define SET_STATIC_DROP_V4 = { $dummy_v4, $SCANNER_V4 }
+# specify your public container IPv6 subnets here
+define SET_STATIC_ALLOW_V6 = { $dummy_v6 }
 define SET_STATIC_DROP_V6 = { $dummy_v6 }
 
 # Service definitions for easier access

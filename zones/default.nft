@@ -4,6 +4,9 @@ chain default {
 	# addressed to the host itself, i.e. not forwarded but coming from e.g.
 	# cni-podman* or docker-* interfaces.
 
+	# source address based allow-/blocklist
+	jump xlist-lookup
+	
 	jump default-zone-svc
 	jump proto-filter
 

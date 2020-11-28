@@ -1,14 +1,13 @@
 # try to reuse existing chains as jump targets
 chain forward {
-	type filter hook forward priority filter; policy drop;
-
-	# call ct-mark-filter manually since we don't traverse dispatch
-	jump ct-mark-filter
+	# source address based allow-/blocklist
+	jump xlist-lookup
 
 	jump forward-zone-svc
 	jump proto-filter
 
-	# forward for local subnets
+	# forward for local subnets, allows container communication
+	# without marking packets
 	ip saddr @set_private_net_v4 accept
 	ip6 saddr @set_private_net_v6 accept
 

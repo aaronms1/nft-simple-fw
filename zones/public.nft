@@ -1,5 +1,7 @@
 chain public {
-	# ct-mark-filter is called by dispatch for performance reasons
+	# source address based allow-/blocklist
+	jump xlist-lookup
+	
 	jump public-zone-svc
 	jump proto-filter
 	

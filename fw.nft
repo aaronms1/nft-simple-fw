@@ -62,14 +62,28 @@ table inet fw {
 	}
 
 	# static list, primarily for scanner networks
-	set set_drop_v4 {
+	set set_allow_static_v4 {
+		type ipv4_addr
+		flags constant,interval
+		auto-merge
+		elements = $SET_STATIC_ALLOW_V4
+	}
+
+	set set_drop_static_v4 {
 		type ipv4_addr
 		flags constant,interval
 		auto-merge
 		elements = $SET_STATIC_DROP_V4
 	}
 
-	set set_drop_v6 {
+	set set_allow_static_v6 {
+		type ipv6_addr
+		flags constant,interval
+		auto-merge
+		elements = $SET_STATIC_ALLOW_V6
+	}
+
+	set set_drop_static_v6 {
 		type ipv6_addr
 		flags constant,interval
 		auto-merge
@@ -77,7 +91,7 @@ table inet fw {
 	}
 
 	# dynamic lists with timeout
-	set set_allowlist_v4 {
+	set set_allow_dyn_v4 {
 		type ipv4_addr
 		flags interval,timeout
 		timeout 1d
@@ -86,7 +100,7 @@ table inet fw {
 		elements = $SET_ALLOW_NETS_V4
 	}
 
-	set set_blocklist_v4 {
+	set set_block_dyn_v4 {
 		type ipv4_addr
 		flags interval,timeout
 		timeout 1d
@@ -95,7 +109,7 @@ table inet fw {
 		elements = $SET_BLOCK_NETS_V4
 	}
 
-	set set_allowlist_v6 {
+	set set_allow_dyn_v6 {
 		type ipv6_addr
 		flags interval,timeout
 		timeout 1d
@@ -104,7 +118,7 @@ table inet fw {
 		elements = $SET_ALLOW_NETS_V6
 	}
 
-	set set_blocklist_v6 {
+	set set_block_dyn_v6 {
 		type ipv6_addr
 		flags interval,timeout
 		timeout 1d
@@ -117,8 +131,6 @@ table inet fw {
 		type filter hook input priority $HOOK_FILTER_PRIORITY; policy drop;
 		iif "lo" accept
 		jump ct-mark-filter
-		# source address based allow-/blocklist
-		jump xlist-dispatch
 
 		iifgroup vmap {
 			$IIFGROUP_ETHERNET : goto input-zone-dispatch,
@@ -137,28 +149,27 @@ table inet fw {
 		goto public
 	}
 
-	chain icmp-dispatch {
-		ip protocol icmp goto icmpv4-filter
-		ip6 nexthdr ipv6-icmp goto icmpv6-filter
-	}
-
-	chain xlist-dispatch {
-		ip saddr @set_allowlist_v4 accept
-		ip6 saddr @set_allowlist_v6 accept
-		# packets from static lists are always dropped
-		ip saddr @set_drop_v4 counter name "block-static" \
+	chain xlist-lookup {
+		ip saddr @set_allow_static_v4 accept
+		ip6 saddr @set_allow_static_v6 accept
+		ip saddr @set_allow_dyn_v4 accept
+		ip6 saddr @set_allow_dyn_v6 accept
+		# packets from static blocklists are always dropped
+		ip saddr @set_drop_static_v4 counter name "block-static" \
 			goto $CHAIN_LOG_DISPATCH_DROP
-		ip6 saddr @set_drop_v6 counter name "block-static" \
+		ip6 saddr @set_drop_static_v6 counter name "block-static" \
 			goto $CHAIN_LOG_DISPATCH_DROP
-		# packets from dynamic lists respect chosen block mode
-		ip saddr @set_blocklist_v4 counter name "block-dynamic" \
+		# packets from dynamic blocklists respect chosen block mode
+		ip saddr @set_block_dyn_v4 counter name "block-dynamic" \
 			goto $LIST_BLOCK_MODE
-		ip6 saddr @set_blocklist_v6 counter name "block-dynamic" \
+		ip6 saddr @set_block_dyn_v6 counter name "block-dynamic" \
 			goto $LIST_BLOCK_MODE
 	}
 
 	chain proto-filter {
-		jump icmp-dispatch
+		# `vmap` causes segfault
+		ip protocol icmp goto icmpv4-filter
+		ip6 nexthdr ipv6-icmp goto icmpv6-filter
 		ip protocol igmp goto $CHAIN_LOG_DISPATCH_DROP
 		# drop unsolicited broadcast/multicast
 		meta pkttype { broadcast, multicast } counter name "non-unicast" goto $CHAIN_LOG_DISPATCH_DROP
@@ -169,7 +180,9 @@ table inet fw {
 	chain ct-mark-filter {
 		ct state established,related accept
 		ct state invalid counter name "ct-invalid" goto $CHAIN_LOG_DISPATCH_DROP
+		# accept marked connections
 		ct mark $MARK_FASTPATH_ID accept
+		# accept marked packets
 		meta mark $MARK_FASTPATH_ID accept
 	}
 
@@ -259,6 +272,18 @@ table inet fw {
 		jump $CHAIN_LOG_DISPATCH_REJECT
 		reject with tcp reset comment "icmpx tcp reset"
 		# end of rule traversal
+	}
+
+	chain forward-zone-dispatch {
+		type filter hook forward priority filter; policy drop;
+		jump ct-mark-filter
+		jump forward
+	}
+
+	chain output-zone-dispatch {
+		type filter hook output priority filter; policy drop;
+		jump ct-mark-filter
+		jump output
 	}
 
 	# reusable service jump targets
