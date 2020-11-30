@@ -4,13 +4,13 @@ chain log-reject {
 	# this allows specifying a reject method on return
 	counter name "reject-total" comment "total packets rejected"
 	limit rate 5/minute burst 5 packets \
-		log prefix "[fw (reject)]: "  level debug flags ip options
+		log prefix "[FW (REJECT)]: "  level debug flags ip options
 }
 
 chain log-drop {
 	counter name "drop-total" comment "total packets dropped"
 	limit rate 5/minute burst 5 packets \
-		log prefix "[fw (drop)]: " level debug flags ip options
+		log prefix "[FW (DROP)]: " level debug flags ip options
 	drop comment "drop packet"
 	# end of rule traversal
 }
@@ -21,13 +21,13 @@ chain nflog-reject {
 	# this allows specifying a reject method on return
 	counter name "reject-total" comment "total packets rejected"
 	limit rate 5/minute burst 5 packets \
-		log prefix "[fw (reject)]: " group 1
+		log prefix "[REJECT]: " group 1
 }
 
 chain nflog-drop {
 	counter name "drop-total" comment "total packets dropped"
 	limit rate 5/minute burst 5 packets \
-		log prefix "[fw (drop)]: " group 1
+		log prefix "[ DROP ]: " group 1
 	drop comment "drop packet"
 	# end of rule traversal
 }

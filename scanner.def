@@ -69,12 +69,23 @@ define scanner_shodan = {
 	98.143.148.13
 }
 
+define scanner_nebula = {
+	165.227.145.57,
+	138.197.177.9,
+	188.166.165.223,
+	207.154.232.0,
+	207.154.232.94,
+	139.59.247.39,
+	178.128.52.144
+}
+
 define SCANNER_V4 = {
 	$scanner_censys,
 	$scanner_rapid7,
 	$scanner_openportstats,
 	$scanner_shadowserver,
-	$scanner_shodan
+	$scanner_shodan,
+	$scanner_nebula
 }
 
 # vim: set ft=nft

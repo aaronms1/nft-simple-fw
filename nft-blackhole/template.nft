@@ -65,22 +65,22 @@ table inet blackhole {
 	}
 	
 	chain log-block {
-		limit rate 5/minute burst 5 packets log prefix "[bh (bl)]: " level debug flags ip options
+		limit rate 5/minute burst 5 packets log prefix "[BH (BL)]: " level debug flags ip options
 		${block_policy}
 	}
 
 	chain log-country {
-		limit rate 5/minute burst 5 packets log prefix "[bh (cn)]: " level debug flags ip options
+		limit rate 5/minute burst 5 packets log prefix "[BH (CN)]: " level debug flags ip options
 		${country_policy}
 	}
 
 	chain nflog-block {
-		limit rate 5/minute burst 5 packets log prefix "[bh (bl)]: " group 2 
+		limit rate 5/minute burst 5 packets log prefix "[BL]: " group 2 
 		${block_policy}
 	}
 
 	chain nflog-country {
-		limit rate 5/minute burst 5 packets log prefix "[bh (cn)]: " group 2
+		limit rate 5/minute burst 5 packets log prefix "[CN]: " group 2
 		${country_policy}
 	}
 }

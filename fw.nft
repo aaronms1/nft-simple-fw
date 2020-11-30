@@ -303,7 +303,6 @@ table inet fw {
 	include "./zones/default.nft"
 
 	# custom rules
-	#include "./custom/*.[def,nft]"
 	include "./custom/*.def"
 	include "./custom/*.nft"
 }
