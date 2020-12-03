@@ -26,6 +26,13 @@ table inet fw {
 	counter reject-total { packets 0 bytes 0 }
 	# dropped total
 	counter drop-total { packets 0 bytes 0 }
+	# zone traversal statistics
+	counter zone-default { packets 0 bytes 0 }
+	counter zone-forward { packets 0 bytes 0 }
+	counter zone-output { packets 0 bytes 0 }
+	counter zone-private { packets 0 bytes 0 }
+	counter zone-public { packets 0 bytes 0 }
+	counter zone-vpn { packets 0 bytes 0 }
 
 	define NET_V6_LINK_LOCAL = fe80::/10
 
@@ -150,10 +157,10 @@ table inet fw {
 	}
 
 	chain xlist-lookup {
-		ip saddr @set_allow_static_v4 accept
-		ip6 saddr @set_allow_static_v6 accept
-		ip saddr @set_allow_dyn_v4 accept
-		ip6 saddr @set_allow_dyn_v6 accept
+		ip saddr @set_allow_static_v4 counter accept
+		ip6 saddr @set_allow_static_v6 counter accept
+		ip saddr @set_allow_dyn_v4 counter accept
+		ip6 saddr @set_allow_dyn_v6 counter accept
 		# packets from static blocklists are always dropped
 		ip saddr @set_drop_static_v4 counter name "block-static" \
 			goto $CHAIN_LOG_DISPATCH_DROP
@@ -178,31 +185,31 @@ table inet fw {
 	}
 
 	chain ct-mark-filter {
-		ct state established,related accept
+		ct state established,related counter accept
 		ct state invalid counter name "ct-invalid" goto $CHAIN_LOG_DISPATCH_DROP
 		# accept marked connections
-		ct mark $MARK_FASTPATH_ID accept
+		ct mark $MARK_FASTPATH_ID counter accept
 		# accept marked packets
-		meta mark $MARK_FASTPATH_ID accept
+		meta mark $MARK_FASTPATH_ID counter accept
 	}
 
 	chain rp-filter {
 		# reverse path filter for ipv6
 		type filter hook prerouting priority raw; policy drop;
-		fib saddr . iif oif exists accept
+		fib saddr . iif oif exists counter accept
 		counter name "no-reverse-path" goto $CHAIN_LOG_DISPATCH_DROP
 	}
 
 	chain icmpv6-filter {
 		# allow configured types
-		icmpv6 type @set_icmp_v6 accept
+		icmpv6 type @set_icmp_v6 counter accept
 		# and all essential types according to rfc4890
 		jump rfc4890
 		counter name "unwanted-icmpv6" goto $CHAIN_LOG_DISPATCH_DROP 
 	}
 
 	chain icmpv4-filter {
-		icmp type @set_icmp_v4 accept
+		icmp type @set_icmp_v4 counter accept
 		counter name "unwanted-icmp" goto $CHAIN_LOG_DISPATCH_DROP
 	}
 
@@ -218,7 +225,7 @@ table inet fw {
 			parameter-problem,
 			echo-request,
 			echo-reply
-		} accept;
+		} counter accept;
 
 		# allow auto configuration support.
 		icmpv6 type {
@@ -226,21 +233,21 @@ table inet fw {
 			nd-neighbor-advert,
 			nd-router-advert,
 			nd-router-solicit
-		} ip6 hoplimit 255 accept;
+		} ip6 hoplimit 255 counter accept;
 
 		# allow multicast listener discovery on link-local addresses.
 		icmpv6 type {
 			mld-listener-query,
 			mld-listener-report,
 			mld-listener-reduction
-		} ip6 saddr $NET_V6_LINK_LOCAL accept;
+		} ip6 saddr $NET_V6_LINK_LOCAL counter accept;
 
 		# allow multicast router discovery messages on link-local
 		# addresses (hop limit 1).
 		icmpv6 type {
 			nd-router-advert,
 			nd-router-solicit
-		} ip6 hoplimit 1 ip6 saddr $NET_V6_LINK_LOCAL accept;
+		} ip6 hoplimit 1 ip6 saddr $NET_V6_LINK_LOCAL counter accept;
 	}
 
 	chain reject-verdict {
@@ -275,13 +282,13 @@ table inet fw {
 	}
 
 	chain forward-zone-dispatch {
-		type filter hook forward priority filter; policy drop;
+		type filter hook forward priority $HOOK_FILTER_PRIORITY; policy drop;
 		jump ct-mark-filter
 		jump forward
 	}
 
 	chain output-zone-dispatch {
-		type filter hook output priority filter; policy drop;
+		type filter hook output priority $HOOK_FILTER_PRIORITY; policy drop;
 		jump ct-mark-filter
 		jump output
 	}

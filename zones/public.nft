@@ -1,4 +1,5 @@
 chain public {
+	counter name "zone-public"
 	# source address based allow-/blocklist
 	jump xlist-lookup
 	

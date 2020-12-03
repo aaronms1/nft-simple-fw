@@ -1,1 +1,1 @@
-udp sport bootps udp dport bootpc accept comment "dhcpv4 renewals unicast"
+udp sport bootps udp dport bootpc counter accept comment "dhcpv4 renewals unicast"

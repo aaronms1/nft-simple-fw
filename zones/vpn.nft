@@ -1,4 +1,5 @@
 chain vpn {
+	counter name "zone-vpn"
 	jump vpn-zone-svc
-	accept
+	counter accept
 }

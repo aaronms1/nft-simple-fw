@@ -1,5 +1,6 @@
 # try to reuse existing chains as jump targets
 chain forward {
+	counter name "zone-forward"
 	# source address based allow-/blocklist
 	jump xlist-lookup
 
@@ -8,8 +9,8 @@ chain forward {
 
 	# forward for local subnets, allows container communication
 	# without marking packets
-	ip saddr @set_private_net_v4 accept
-	ip6 saddr @set_private_net_v6 accept
+	ip saddr @set_private_net_v4 counter accept
+	ip6 saddr @set_private_net_v6 counter accept
 
 	goto $DEFAULT_VERDICT
 }

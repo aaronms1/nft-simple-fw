@@ -1,4 +1,5 @@
 chain default {
+	counter name "zone-default"
 	# Packets not belonging to any interface group traverse this chain.
 	# This is usually for handling traffic originating from inside containers
 	# addressed to the host itself, i.e. not forwarded but coming from e.g.
@@ -11,8 +12,8 @@ chain default {
 	jump proto-filter
 
 	# accept all (bridged) veth traffic to the host
-	ip saddr @set_private_net_v4 accept
-	ip6 saddr @set_private_net_v6 accept
+	ip saddr @set_private_net_v4 counter accept
+	ip6 saddr @set_private_net_v6 counter accept
 	
 	goto $DEFAULT_VERDICT
 }

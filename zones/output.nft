@@ -1,3 +1,4 @@
 chain output {
-	accept
+	counter name "zone-output"
+	counter accept
 }
