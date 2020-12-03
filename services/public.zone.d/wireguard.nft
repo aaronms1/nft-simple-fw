@@ -1,1 +1,1 @@
-udp dport $DPORT_TCP_WIREGUARD counter accept comment "wireguard protocol"
+udp dport $DPORT_TCP_WIREGUARD ct state new counter accept comment "wireguard protocol"

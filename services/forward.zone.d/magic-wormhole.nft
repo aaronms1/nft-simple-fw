@@ -1,2 +1,2 @@
 # podman container
-ip daddr @set_private_net_v4 tcp dport $DPORT_TCP_WORMHOLE counter accept comment "magic-wormhole-(relay,mailbox) container"
+ip daddr @set_private_net_v4 tcp dport $DPORT_TCP_WORMHOLE ct state new counter accept comment "magic-wormhole-(relay,mailbox) container"

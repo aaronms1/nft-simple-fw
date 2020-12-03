@@ -1,1 +1,1 @@
-tcp dport ssh counter accept comment "ssh protocol"
+tcp dport ssh ct state new counter accept comment "ssh protocol"

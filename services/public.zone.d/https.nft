@@ -1,1 +1,1 @@
-tcp dport { http, https } counter accept comment "http/s protocol"
+tcp dport { http, https } ct state new counter accept comment "http/s protocol"

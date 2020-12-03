@@ -1,2 +1,2 @@
-tcp dport $DPORT_TCP_SYNCTHING counter accept comment "syncthing transfer protocol"
-udp dport $DPORT_UDP_SYNCTHING counter accept comment "syncthing discovery protocol"
+tcp dport $DPORT_TCP_SYNCTHING ct state new counter accept comment "syncthing transfer protocol"
+udp dport $DPORT_UDP_SYNCTHING ct state new counter accept comment "syncthing discovery protocol"

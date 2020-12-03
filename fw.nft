@@ -137,7 +137,7 @@ table inet fw {
 	chain iif-dispatch {
 		type filter hook input priority $HOOK_FILTER_PRIORITY; policy drop;
 		iif "lo" accept
-		jump ct-mark-filter
+		jump ct-filter-bypass
 
 		iifgroup vmap {
 			$IIFGROUP_ETHERNET : goto input-zone-dispatch,
@@ -184,7 +184,7 @@ table inet fw {
 		rt type 0 counter name "type0-header" goto log6-reject-addr-unreachable
 	}
 
-	chain ct-mark-filter {
+	chain ct-filter-bypass {
 		ct state established,related counter accept
 		ct state invalid counter name "ct-invalid" goto $CHAIN_LOG_DISPATCH_DROP
 		# accept marked connections
@@ -283,13 +283,13 @@ table inet fw {
 
 	chain forward-zone-dispatch {
 		type filter hook forward priority $HOOK_FILTER_PRIORITY; policy drop;
-		jump ct-mark-filter
+		jump ct-filter-bypass
 		jump forward
 	}
 
 	chain output-zone-dispatch {
 		type filter hook output priority $HOOK_FILTER_PRIORITY; policy drop;
-		jump ct-mark-filter
+		jump ct-filter-bypass
 		jump output
 	}
 

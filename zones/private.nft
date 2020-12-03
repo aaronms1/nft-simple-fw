@@ -1,6 +1,6 @@
 chain private {
 	counter name "zone-private"
-	# ct-mark-filter is called by dispatch for performance reasons
+	# ct-filter-bypass is called by dispatch for performance reasons
 	jump private-zone-svc
 	# comment out the next line to not include public services
 	jump public-zone-svc
