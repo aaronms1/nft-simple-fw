@@ -1,2 +1,3 @@
-tcp dport $DPORT_TCP_SYNCTHING ct state new counter accept comment "syncthing transfer protocol"
-udp dport $DPORT_UDP_SYNCTHING ct state new counter accept comment "syncthing discovery protocol"
+tcp dport $DPORT_TCP_SYNC_SYNCTHING ct state new counter accept comment "syncthing TCP based sync protocol traffic"
+udp dport $DPORT_UDP_SYNC_SYNCTHING ct state new counter accept comment "syncthing QUIC based sync protocol traffic"
+udp dport $DPORT_UDP_DISC_SYNCTHING ct state new counter accept comment "syncthing discovery broadcasts on IPv4 and multicasts on IPv6"

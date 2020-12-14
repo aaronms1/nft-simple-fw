@@ -69,10 +69,11 @@ define SET_STATIC_DROP_V6 = { $dummy_v6 }
 # Service definitions for easier access
 # Can be referenced in service files
 ## syncthing
-define DPORT_TCP_SYNCTHING = 22000
-define DPORT_UDP_SYNCTHING = 21027
+define DPORT_TCP_SYNC_SYNCTHING = 22000
+define DPORT_UDP_SYNC_SYNCTHING = 22000
+define DPORT_UDP_DISC_SYNCTHING = 21027
 ## wireguard
-define DPORT_TCP_WIREGUARD = 51820
+define DPORT_UDP_WIREGUARD = 51820
 ## magic-wormhole
 define DPORT_TCP_WORMHOLE = 4000-4001
 
