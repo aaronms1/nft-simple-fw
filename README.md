@@ -12,7 +12,7 @@ Packets traverse differents zones depending on distinct criteria, mainly the int
 - **[public](zones/public.nft)**: Packets coming from public ip ranges, passing through the main interface(s) (group **1** by default).
 - **[private](zones/private.nft)**: Packets coming from local networks, passing through the main interface(s) (group **1** by default).
 - **[forward](zones/forward.nft)**: Packets destined for other machines or subnets not directly configured on the host but expected to be forwarded.
-- **[vpn](zones/vpn.nft)**: Packets passing through VPN interface(s) (group **1** by default).
+- **[vpn](zones/vpn.nft)**: Packets passing through VPN interface(s) (group **2** by default).
 - **[output](zones/output.nft)**: Packets originating from the host itself.
 - **[default](zones/default.nft)**: Packets not matching any of the above interface groupings (group is **unset**).
 
